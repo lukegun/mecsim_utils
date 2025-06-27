@@ -12,7 +12,7 @@ def mecs_get():
     python_version = f"{sys.version_info[0] }.{sys.version_info[1]}"
     cpu_arch = platform.processor()
 
-    # to lazy to make this a switch
+    # to lazy to make this a switch or a hashmap
     try:
         if python_version == "3.12" and cpu_arch=="x86_64":
             from .python_312.mecsim import mecsim_main # load in python_312
@@ -20,7 +20,7 @@ def mecs_get():
             message = f"ERROR: compiled MECSim's not compadable with python version { python_version } and cpu arch { cpu_arch }"
             raise ValueError(message)
 
-    except Exception as e:
+    except ValueError as e:
         print("ERROR: ", e)
         exit(1)        
 

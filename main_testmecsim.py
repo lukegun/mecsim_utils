@@ -6,13 +6,9 @@ as well as the MECSim_F2PY
 LG 20/6/2023
 """
 
-import numpy as np
-import scipy as sci
+
 import mecsim_utils.processing.utils as mecUtils
-import sys
-import os
 import matplotlib.pyplot as plt
-import shutil
 import matplotlib.pyplot as plt
 from mecsim_utils.transformations.inp.datamodel import INP_DataModel
 from mecsim_utils.transformations.mecsim.datamodel import MECSIM_DataModel
@@ -46,6 +42,8 @@ def MECSim_test(comp_files):
     #spaces_dic = utilsmec.data_finderV2(datanum)
     Mec_parser = INP_DataModel(filename, to_struct=True)
     MECsimstruct = Mec_parser.transform()
+    print(MECsimstruct.temp)
+    exit(1)
     print("EHHH")
     Mec_parser2 = INP_DataModel(MECsimstruct, to_struct=False)
     MECsiminp = Mec_parser2.transform()
