@@ -1,5 +1,7 @@
 """
-    THIS IS A FUNCTION FOR GETTING A MECSIM COMPADIBLE VERSION BASED on python version and archetecture
+    THIS IS A FUNCTION FOR GETTING A MECSIM cextention that is made
+    by the numpy F2PY which is COMPADIBLE 
+    BASED on python version and archetecture
 """
 
 
