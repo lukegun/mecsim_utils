@@ -5,6 +5,9 @@
 
 from . import stuctural_func as inp_struct
 
+# required to load in the dataclasss
+from ..datastruct import Base_MEC  
+import dataclasses
 
 # TODO SET THIS ALL UP TO HANDLE OTHER DATA THAT WOULD BE PASSED TO IT
 class INP_DataModel:
@@ -21,7 +24,7 @@ class INP_DataModel:
             self.loadinp = True # might need to be moved out but fine enough
         elif isinstance(self.input, list): # check to see 
             self.loadinp = False
-        elif isinstance(self.input, dict) and not self.to_struct:
+        elif dataclasses.is_dataclass(self.input) and not self.to_struct:
             self.to_struct = False
         else:
             raise Exception('Error: incorrect file passed to inp <-> structer convertor')
@@ -62,6 +65,11 @@ class INP_DataModel:
     
     # convert the dictionary structure to inp file
     def mec_dic2inp(self):
+
+        # convert datastructures as 
+        self.input = dataclasses.asdict(self.input)
+
+        print(self.input)
         
         # get the initial key dataspaces
         self.data_finder_struct(self.input)
@@ -94,7 +102,7 @@ class INP_DataModel:
                                 "n_fixed": 12, # Use a fixed number of timesteps rather than 2^N
                                 "beta": 13,     # beta
                                 "dstar": 14,    # dtar_min
-                                "v_st": 15,     # max voinp_struct.ltage step
+                                "v_st": 15,     # max voltage step
                                 "t_res": 16,    # time resolution experimentally to correct vscan/f (us)
                                 "debug": 17,    # show debug output files as well as MECSimOutput.txt (1=yes; 0=no)
                                 "adv_v": 18,    # use advanced voltage ramp (0 = E_start=E_end, 1 = use advanced ramp below, 2=From file 'EInput.txt')
@@ -135,7 +143,7 @@ class INP_DataModel:
 
         # collect a bunch of pointer structures
         functionpointers = inp_struct.inp_to_datastructure()
-        self.datastruct = {}
+        self.datastruct = {} # TODO CANGE TO CLASS
 
         # parameterspecific
         for keys, funcs in functionpointers["function"].items():
@@ -148,7 +156,11 @@ class INP_DataModel:
             s = self.mapping_forward[keys]
             listin = datanum[s:s+self.spaces_dic[keys]]
             self.datastruct.update({keys:funcs(listin)})
-
+        #self.datastruct.update({"MISC":1})        
+        # load in the data structures
+        #DataStruct = Base_MEC("INP")
+        self.datastruct = Base_MEC(**self.datastruct)
+        
         return self.datastruct
 
     # This is a function to convert the structure back to an inp Just returns a giant string that can be printer to file

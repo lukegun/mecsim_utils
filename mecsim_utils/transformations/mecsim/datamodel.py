@@ -3,7 +3,7 @@
 """
 
 import numpy as np
-
+from dataclasses import asdict
 
 
 class MECSIM_DataModel:
@@ -11,7 +11,7 @@ class MECSIM_DataModel:
     def __init__(self,input):
 
         # this are needed for the backward pregression but less so other way
-        self.input = input # this is the data structure
+        self.input = asdict(input) # this is the data structure
 
         # Key values used to deal with fortran being static varibles
 

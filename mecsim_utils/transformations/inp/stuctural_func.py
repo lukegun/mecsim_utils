@@ -25,7 +25,6 @@ def inp_to_datastructure():
     for var in funcmapping["parameter"]["repeat"]:
         repeatdic.update({var:repeat_inp2struct})
 
-
     return {"function":struc, "repeat":repeatdic}
 
 

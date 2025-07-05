@@ -43,7 +43,7 @@ def MECSim_test(comp_files):
     Mec_parser = INP_DataModel(filename, to_struct=True)
     MECsimstruct = Mec_parser.transform()
     print(MECsimstruct.temp)
-    exit(1)
+    #exit(1)
     print("EHHH")
     Mec_parser2 = INP_DataModel(MECsimstruct, to_struct=False)
     MECsiminp = Mec_parser2.transform()
@@ -53,11 +53,11 @@ def MECSim_test(comp_files):
     Currenttot = mecUtils.mecsim_current(MECsimstruct)
 
     # get autobandwidth
-    bandwidth = ftcount.bandwidthallocator(MECsimstruct["AC"][0]["f"])
+    bandwidth = ftcount.bandwidthallocator(MECsimstruct.AC[0]["f"])
 
     np = len(Currenttot)
     deltatime = 14/np
-    nsimdeci = ftcount.Simerharmtunc(len(Currenttot), deltatime, bandwidth, MECsimstruct["AC"][0]["f"], HarmMax=12)
+    nsimdeci = ftcount.Simerharmtunc(len(Currenttot), deltatime, bandwidth, MECsimstruct.AC[0]["f"], HarmMax=12)
 
 
     # calculate a rough N estimate
@@ -68,7 +68,7 @@ def MECSim_test(comp_files):
         bandwidtharray.append(bandwidth)
 
     # this function takes the current and 
-    harmonics = mecUtils.primaryharmoniccalc(Currenttot, MECsimstruct["AC"][0]["f"],bandwidtharray)
+    harmonics = mecUtils.primaryharmoniccalc(Currenttot, MECsimstruct.AC[0]["f"],bandwidtharray)
 
     plt.plot(Currenttot)
     plt.savefig("test.png")
