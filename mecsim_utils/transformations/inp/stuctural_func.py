@@ -129,7 +129,7 @@ def sol_struct2inp(vallist):
 def ac_struct2inp(vallist):
     output = []
     for vals in vallist:
-        s = "{:.4f}, {:.4f}import".format(vals["a"],vals["f"]) # thisis enough of a 
+        s = "{:.4f}, {:.4f}".format(vals["a"],vals["f"]) # thisis enough of a 
         output.append(s)
 
     return output
