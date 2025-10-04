@@ -68,8 +68,6 @@ class INP_DataModel:
 
         # convert datastructures as 
         self.input = dataclasses.asdict(self.input)
-
-        print(self.input)
         
         # get the initial key dataspaces
         self.data_finder_struct(self.input)
@@ -152,7 +150,6 @@ class INP_DataModel:
 
         # DO THE REPEAT PROCESS
         for keys, funcs in functionpointers["repeat"].items():
-            #print(keys, self.datanum[items])
             s = self.mapping_forward[keys]
             listin = datanum[s:s+self.spaces_dic[keys]]
             self.datastruct.update({keys:funcs(listin)})
