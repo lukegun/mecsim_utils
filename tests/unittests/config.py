@@ -9,8 +9,9 @@ import mecsim_utils.processing.utils as mecUtils
 # this parameterises over all the experimental input files
 @pytest.fixture(params=["tests/testingconfig/Master.inp",
                         "tests/testingconfig/MasterE.inp",
+                        "tests/testingconfig/Master_advanced_ramp.inp",
                         "tests/testingconfig/Master_EE_OX.inp"],
-                 ids=["E_ox", "E_red", "EE_ox"])
+                 ids=["E_ox", "E_red", "E_complex_ramp","EE_ox"])
 def inp_factory(request):
     return request.param
 

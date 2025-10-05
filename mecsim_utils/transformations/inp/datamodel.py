@@ -153,6 +153,11 @@ class INP_DataModel:
             s = self.mapping_forward[keys]
             listin = datanum[s:s+self.spaces_dic[keys]]
             self.datastruct.update({keys:funcs(listin)})
+
+        # calculate an approximate total runtime
+        tottime = self.runtime_guesser()
+        self.datastruct.update({"time_tot":tottime})
+
         #self.datastruct.update({"MISC":1})        
         # load in the data structures
         #DataStruct = Base_MEC("INP")
@@ -274,3 +279,33 @@ class INP_DataModel:
                     "kinetic": Nrec, "cap":Ncap, "Ntot":Nrows} # seconds number of repeats
 
         return 
+    
+    # because it works best for downstream process's if we have an approximate 
+    # runtime as this allows us to not have to guess it elsewhere
+    def runtime_guesser(self):
+
+        # check if using advanced voltage ramp
+        if self.datastruct["adv_v"] == 0: # generic use case cyclic voltage
+            tot_time = self.datastruct["Ncyc"]*(2*abs(self.datastruct["estart"]-
+                                    self.datastruct["eend"])/self.datastruct["v"])
+        elif self.datastruct["adv_v"] == 1: # complex voltage ramp use case
+            
+            s = self.datastruct["adv_estr"] # E_start (V)
+            e_len = 0
+            for e in self.datastruct["erev"]:
+                e_len += abs(s-e)
+                s = e
+            e_len += abs(s-self.datastruct["adv_eend"])
+
+            # allow for multiple cycles
+            e_len *= self.datastruct["Ncyc"]
+
+            tot_time = e_len/self.datastruct["v"]
+
+        elif self.datastruct["adv_v"] == 2:
+            raise ValueError("ERROR: method of passing EInput.txt isn't currently supported, try advanced ramp case instead.") 
+
+
+        return tot_time
+
+        

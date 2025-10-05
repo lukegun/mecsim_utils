@@ -12,6 +12,16 @@ from tests.unittests.config import inp_factory, current_factory
 import mecsim_utils.processing.auto_ftacv as ftcount
 
 
+def test_frequency_transform(current_factory):
+
+    Currenttot, MECsimstruct = current_factory
+
+    frequency_curr, frequency_space = ftcount.frequency_transform(Currenttot, MECsimstruct)
+
+    
+
+    return
+
 # test bandwidth allicator
 def test_bandwidth_ally(current_factory):
 

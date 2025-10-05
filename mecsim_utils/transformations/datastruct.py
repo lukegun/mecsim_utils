@@ -19,6 +19,7 @@ class Base_MEC:
     Ncyc: int # number of cycles of voltammogram
     v: float # scanrate
     area: float # electrode surface area
+    time_tot: float # overall runtime for the simulation
     
     # Misc other items
     #MISC: dict

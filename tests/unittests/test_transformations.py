@@ -60,3 +60,5 @@ def test_INP_2_mecsim(inp_factory):
     Currenttot = mecUtils.mecsim_current(MECsimstruct)
 
     return
+
+# validate that the data structors converted match a specific data class PYDANTIC???

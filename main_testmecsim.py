@@ -56,7 +56,7 @@ def MECSim_test(comp_files):
     bandwidth = ftcount.bandwidthallocator(MECsimstruct.AC[0]["f"])
 
     np = len(Currenttot)
-    deltatime = 14/np
+    deltatime = 1/np
     nsimdeci = ftcount.Simerharmtunc(len(Currenttot), deltatime, bandwidth, MECsimstruct.AC[0]["f"], HarmMax=12)
 
 

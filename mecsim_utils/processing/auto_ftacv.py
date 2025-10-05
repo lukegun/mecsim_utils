@@ -7,7 +7,7 @@
 
 import numpy as np
 import mecsim_utils.utils.utils as Cutils
-from scipy.fft import ifft, ifftfreq
+from scipy.fft import ifft, fft, fftfreq
 
 # plotting functions
 import matplotlib.pyplot as plt
@@ -19,12 +19,21 @@ def bandwidthallocator(Currenttot):
 
     
     
+    
     return bandwidth
 
-def frequency_transform():
-    
 
-    return
+def frequency_transform(Currenttot, MECsimstruct):
+
+    n = Currenttot.shape[0]
+    # calculate time step (dt = (2*(Efin-Est)/v)/Ndata)
+    # calculate time step (dt = (timetot)/Ndata) HOW TO DO IT
+    dt = ((MECsimstruct[3]-MECsimstruct[2])/MECsimstruct[5])/n
+
+    frequency_space = fftfreq(n, d=dt)
+    frequency_curr = fft(Currenttot)
+
+    return frequency_curr, frequency_space
 
 
 #extracts windows for log10 auto counter
