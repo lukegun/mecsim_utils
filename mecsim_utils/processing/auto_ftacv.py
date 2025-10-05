@@ -7,46 +7,25 @@
 
 import numpy as np
 import mecsim_utils.utils.utils as Cutils
-from scipy.fft import rfft, rfftfreq
+from scipy.fft import ifft, ifftfreq
+
+# plotting functions
+import matplotlib.pyplot as plt
 
 # these are all required such that frequency and scanrate couple and analytical is to difficult. multiple DNNs
 # Will be reuired for higher faster DC regions
 # TODO MAKE THESE FUNCTIONS A BUNCH SMARTER
-def bandwidthallocator(freq):
+def bandwidthallocator(Currenttot):
 
-    # sets up an array which can be called from 
-    bandwidth = bandwidthchanger(6)
-
-    if freq <= 12:
-        bandwidth = bandwidth[0]
-    elif freq > 12 and freq <= 24:
-        bandwidth = bandwidth[1]
-    elif freq > 24 and freq <= 34:
-        bandwidth = bandwidth[2]
-    elif freq > 34 and freq <= 45:
-        bandwidth = bandwidth[3]
-    elif freq > 45 and freq <= 75:
-        bandwidth = bandwidth[4]
-    elif freq >= 75:
-        bandwidth = bandwidth[5]
-    else:
-        print("incorrect parameters")
-        print(freq)
-
+    
+    
     return bandwidth
 
+def frequency_transform():
+    
 
-# required to change the broadening of peaks due to scanrate
-def bandwidthchanger(bandwidth):
+    return
 
-    bandwidth2 = [bandwidth]
-    bandwidth2.append(bandwidth*1.5) #12
-    bandwidth2.append(bandwidth*2)  #18
-    bandwidth2.append(bandwidth*3)  #18
-    bandwidth2.append(bandwidth * 3)   #60
-    bandwidth2.append(bandwidth * 3)   #72
-
-    return bandwidth2
 
 #extracts windows for log10 auto counter
 def Simerharmtunc(Nsimlength, exptime, bandwidth, AC_freq, HarmMax=12):

@@ -53,7 +53,7 @@ def primaryharmoniccalc(Currenttot, ACfreq, bandwidtharray, std=0.1,windowfunc=T
 
 """JUST SET UP A SECONDARY FUNCTION FOR SECONDARY HARMONICS"""
 # TODO
-def primaryharmoniccalc(Currenttot, bandwidtharray, std=0.1,windowfunc=True, HilbertTran=True):
+def secondaryharmoniccalc(Currenttot, bandwidtharray, std=0.1,windowfunc=True, HilbertTran=True):
     """
         IF STD SET TO 0 just no guassian?
     """
