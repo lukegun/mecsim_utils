@@ -15,20 +15,23 @@ import matplotlib.pyplot as plt
 # these are all required such that frequency and scanrate couple and analytical is to difficult. multiple DNNs
 # Will be reuired for higher faster DC regions
 # TODO MAKE THESE FUNCTIONS A BUNCH SMARTER
-def bandwidthallocator(Currenttot):
+def bandwidthallocator(frequency_current,MECsimstruct):
+
+    # get the ac signals
+    AC_signals = [x["f"] for x in MECsimstruct.AC]
+
+    print(AC_signals)
+
 
     
     
-    
-    return bandwidth
+    return 
 
 
-def frequency_transform(Currenttot, MECsimstruct):
+def frequency_transform(Currenttot, tot_time):
 
     n = Currenttot.shape[0]
-    # calculate time step (dt = (2*(Efin-Est)/v)/Ndata)
-    # calculate time step (dt = (timetot)/Ndata) HOW TO DO IT
-    dt = ((MECsimstruct[3]-MECsimstruct[2])/MECsimstruct[5])/n
+    dt = tot_time/n
 
     frequency_space = fftfreq(n, d=dt)
     frequency_curr = fft(Currenttot)
@@ -99,7 +102,7 @@ def PSsigextract(powerspec, nsimdeci):
 
 def harmoniccounter(Curr, nsimdeci, PSdiff=1.0):
 
-    fft_res = rfft(Curr)
+    fft_res = fft(Curr)
 
     # this can be done seperatly So lok into it
     #freq = rfftfreq(len(fft_res),d = exptime) try yo pass through DELTAexptime

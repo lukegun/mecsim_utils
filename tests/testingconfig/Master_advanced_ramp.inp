@@ -18,14 +18,14 @@
 0		! show debug output files as well as MECSimOutput.txt (1=yes; 0=no)
 1		! use advanced voltage ramp (0 = E_start=E_end, 1 = use advanced ramp below, 2=From file "EInput.txt")
 6     	! number of E_rev lines for advanced ramp (if enter 0 then first E_rev value is the final time)
-0.0		! E_start (V)
-1.0		! E_end (V)
--2.0		! E_start (V)
-1.5		! E_end (V)
--1.0		! E_start (V)
-0.0		! E_end (V)
-0.50		! E_rev - REPEAT for more complicated ramps
--0.50		! E_rev - REPEAT for more complicated ramps
+0.50	! E_start (V)
+-0.50	! E_end (V)
+1.0		! E_rev - REPEAT for more complicated ramps
+-0.3			! E_rev - REPEAT for more complicated ramps
+1.0		! E_rev - REPEAT for more complicated ramps
+-1.0		    ! E_rev - REPEAT for more complicated ramps
+0.5		! E_rev - REPEAT for more complicated ramps
+-1.0		! E_rev - REPEAT for more complicated ramps
 1		! Geometry type (1=planar, 2=spherical, 3=cylinder, 4=RDE)
 1.0e0		! Planar: surface area of electrode (cm^2)
 1.0e0		! Number of spheres (can be fractional)

@@ -16,9 +16,10 @@ def test_frequency_transform(current_factory):
 
     Currenttot, MECsimstruct = current_factory
 
-    frequency_curr, frequency_space = ftcount.frequency_transform(Currenttot, MECsimstruct)
-
+    frequency_curr, frequency_space = ftcount.frequency_transform(Currenttot, MECsimstruct.time_tot)
     
+    assert Currenttot.shape == frequency_curr.shape, "ERROR: returned current in f space has the wrong shape"
+    assert Currenttot.shape == frequency_space.shape, "ERROR: frequency space returned something wrong"
 
     return
 
@@ -27,8 +28,11 @@ def test_bandwidth_ally(current_factory):
 
     Currenttot, MECsimstruct = current_factory
 
+    # need to figure out a way to speed this up a little
+    frequency_curr, frequency_space = ftcount.frequency_transform(Currenttot, MECsimstruct.time_tot)
+
     # get autobandwidth
-    bandwidth = ftcount.bandwidthallocator(Currenttot, MECsimstruct.AC[0]["f"])
+    bandwidth = ftcount.bandwidthallocator(frequency_curr, MECsimstruct)
 
     return
 
