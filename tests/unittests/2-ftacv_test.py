@@ -24,15 +24,18 @@ def test_frequency_transform(current_factory):
     return
 
 # test bandwidth allicator
-def test_bandwidth_ally(current_factory):
+def test_bandwidth_ally(request,current_factory):
 
     Currenttot, MECsimstruct = current_factory
+    
+    label = request.node.callspec.id
 
     # need to figure out a way to speed this up a little
     frequency_curr, frequency_space = ftcount.frequency_transform(Currenttot, MECsimstruct.time_tot)
 
     # get autobandwidth
-    bandwidth = ftcount.bandwidthallocator(frequency_curr, MECsimstruct)
+    bandwidth = ftcount.bandwidthallocator(frequency_curr, frequency_space,
+                                            MECsimstruct, label)
 
     return
 
