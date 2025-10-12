@@ -8,7 +8,7 @@ import mecsim_utils.processing.utils as mecUtils
 import mecsim_utils.processing.auto_ftacv as ftcount
 
 # load in the sample testing stuff
-from tests.unittests.config import inp_factory, current_factory
+from tests.unittests.fixture_ftacv import current_factory
 import mecsim_utils.processing.auto_ftacv as ftcount
 
 

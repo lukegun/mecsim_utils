@@ -1,0 +1,4 @@
+1: generate all possible harmonics (need a limit based on Nmax)
+2: generate the ft frequency current and identify background (done)
+3: do a threshold check between 1 and 2
+4: generate harmonics based on desired outcome (hilbert or full)
