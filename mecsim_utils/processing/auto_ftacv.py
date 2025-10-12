@@ -82,12 +82,28 @@ def frequency_transform(Currenttot, tot_time):
 
     return frequency_curr, frequency_space
 
-def calc_secondrary(AC_signals, possible_harmonics={}, ongoing_freq=set(), nmax=12):
+def calc_primrary(AC_signal,  possible_harmonics={}, ongoing_freq=set(), nmax=12):
+
+    possible_harmonics={}
+
+    for i in range(1,nmax+1):
+        freq = i*AC_signal
+        if int(freq) not in ongoing_freq:
+            ongoing_freq.add(int(freq))
+            s = f"{i}"
+            datastruct = datastruct_func(freq,{AC_signal:i},1,i)
+            possible_harmonics.update({s:datastruct})
+
+    return possible_harmonics, ongoing_freq
+
+def calc_secondrary(AC_signals, ongoing_freq=set(), nmax=12):
 
     possible_combinations = [(1,1),(1,-1), (-1,1)]
 
     AC_signals.sort()
     AC_signals.reverse()
+
+    possible_harmonics={}
 
     # only need to do this for the larger of the two  (ie little one splitting of major)
     for i in range(1,nmax+1):
@@ -96,19 +112,23 @@ def calc_secondrary(AC_signals, possible_harmonics={}, ongoing_freq=set(), nmax=
             for z1, z2 in possible_combinations: # loop over the pos and negitive cases
                 freq = z1*i*AC_signals[0] + z2*j*AC_signals[1]
                 if freq > 0 and int(freq) not in ongoing_freq: # to avoid duplicates
+                    ongoing_freq.add(int(freq))
+                    s = f"{z1*i}:{z2*j}"
                     datastruct = datastruct_func(freq,
-                                                    {f"{AC_signals[0]}":z1*i,
-                                                    f"{AC_signals[1]}": z2*j},
+                                                    {AC_signals[0]:z1*i,
+                                                    AC_signals[1]: z2*j},
                                                     2, p)
-                    possible_harmonics.update({int(freq):datastruct})
+                    possible_harmonics.update({s:datastruct})
 
 
     return possible_harmonics, ongoing_freq
 
-def calc_tertiary(AC_signals,  possible_harmonics={}, ongoing_freq=set(), nmax=12):
+def calc_tertiary(AC_signals,  ongoing_freq=set(), nmax=12):
 
     AC_signals.sort()
     AC_signals.reverse()
+
+    possible_harmonics={}
 
     # this are combination of harmonics we are using
     possible_combinations = [(1,1,1),
@@ -123,63 +143,65 @@ def calc_tertiary(AC_signals,  possible_harmonics={}, ongoing_freq=set(), nmax=1
                 for z1, z2, z3 in possible_combinations: # loop over the pos and negitive cases
                     freq = z1*i*AC_signals[0] + z2*j*AC_signals[1] + z3*k*AC_signals[2]
                     if freq > 0 and int(freq) not in ongoing_freq: # to avoid duplicates
-                        
+                        ongoing_freq.add(int(freq))
+                        s = f"{z1*i}:{z2*j}:{z3*k}"
                         datastruct = datastruct_func(freq,
-                                                        {f"{AC_signals[0]}":z1*i ,
-                                                        f"{AC_signals[1]}": z2*j,
-                                                        f"{AC_signals[2]}": z3*k},
+                                                        {AC_signals[0]:z1*i ,
+                                                            AC_signals[1]: z2*j,
+                                                            AC_signals[2]: z3*k},
                                                         3, p)
-                        possible_harmonics.update({int(freq):datastruct})
+                        possible_harmonics.update({s:datastruct})
 
     return possible_harmonics, ongoing_freq
 
 def single_AC(AC_signals, possible_harmonics={}, ongoing_freq=set(), nmax=12):
 
-    for i in range(1,nmax+1):
-        freq = i*AC_signals[0]
-        if int(freq) not in ongoing_freq:
-            datastruct = datastruct_func(freq,{f"{AC_signals[0]}":i},1,i)
-            possible_harmonics.update({int(freq):datastruct})
+    possible_harmonics = {1:{}}
+    ongoing_freq = set()
+    
+    temp, ongoing_freq = calc_primrary(AC_signals, ongoing_freq, nmax=nmax)
+    possible_harmonics[1].update(temp)
 
     return possible_harmonics, ongoing_freq
 
-def dual_AC(AC_signals, possible_harmonics={}, ongoing_freq=set(), nmax=12):
+def dual_AC(AC_signals, nmax=12):
 
-    possible_harmonics = {}
+    possible_harmonics = {1:{},2:{}}
     ongoing_freq = set()
 
     # identify the primrary harmonics
     for z in range(2):
-        possible_harmonics, ongoing_freq = single_AC([AC_signals[z]],  possible_harmonics,
-                                                        ongoing_freq, nmax=nmax)
+        temp, ongoing_freq = calc_primrary(AC_signals[z], 
+                                            ongoing_freq, nmax=nmax)
+        possible_harmonics[1].update(temp)
 
     # calculate the secondary harmonics
-    possible_harmonics, ongoing_freq =  calc_secondrary(AC_signals, possible_harmonics,
-                                                                ongoing_freq,nmax=nmax)
+    temp, ongoing_freq =  calc_secondrary(AC_signals, ongoing_freq, nmax=nmax)
+    possible_harmonics[2].update(temp)
 
     return possible_harmonics, ongoing_freq
 
 
-def triplicate_AC(AC_signals, possible_harmonics={}, ongoing_freq=set(), nmax=12):
+def triplicate_AC(AC_signals, nmax=12):
 
 
-    possible_harmonics = {}
+    possible_harmonics = {1:{},2:{},3:{}}
     ongoing_freq = set()
     # calculate the primrary harmonics
     for z in range(3):
-        possible_harmonics, ongoing_freq  = single_AC([AC_signals[z]], possible_harmonics,
-                                                         ongoing_freq, nmax=nmax)
+        temp, ongoing_freq  = calc_primrary(AC_signals[z], ongoing_freq, nmax=nmax)
+        possible_harmonics[1].update(temp)
 
     # calculate the secondary harmonics
     for z in range(3):
-        possible_harmonics, ongoing_freq = calc_secondrary([AC_signals[z], AC_signals[(z+1)%2]],
-                                                           possible_harmonics,
+        temp, ongoing_freq = calc_secondrary([AC_signals[z], AC_signals[(z+1)%2]],
                                                            ongoing_freq,
                                                            nmax=nmax)
+        possible_harmonics[2].update(temp)
 
     # calculate the tertiary frequencies
-    possible_harmonics, ongoing_freq = calc_tertiary(AC_signals,possible_harmonics,
-                                                           ongoing_freq,nmax=nmax)
+    temp, ongoing_freq = calc_tertiary(AC_signals, ongoing_freq, nmax=nmax)
+    possible_harmonics[3].update(temp)
 
     return possible_harmonics, ongoing_freq
 
@@ -268,6 +290,7 @@ class FTACV_harmonic:
 
         hertz.sort()
         hertz.reverse()
+
         s = f"{self.combination[hertz[0]]}"
         if len(hertz) > 1: 
             for keys in hertz[1:]:
