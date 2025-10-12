@@ -82,124 +82,116 @@ def frequency_transform(Currenttot, tot_time):
 
     return frequency_curr, frequency_space
 
-def single_AC(AC_signals,nmax=12):
+def calc_secondrary(AC_signals, possible_harmonics={}, ongoing_freq=set(), nmax=12):
 
-    possible_harmonics = {}
-    for i in range(1,nmax+1):
-        freq = i*AC_signals[0]
-        datastruct = datastruct_func(freq,{f"{AC_signals[0]}":i},1,i)
-        possible_harmonics.update({f"{freq}":datastruct})
+    possible_combinations = [(1,1),(1,-1), (-1,1)]
 
-    return possible_harmonics
-
-def calc_secondrary(AC_signals,nmax=12):
-
-    possible_harmonics = {}
-
-    AC_signals.sort().reverse()
+    AC_signals.sort()
+    AC_signals.reverse()
 
     # only need to do this for the larger of the two  (ie little one splitting of major)
     for i in range(1,nmax+1):
         for j in range(1,nmax+1):
-            k = abs(i)+ abs(j)
+            p = i + j
+            for z1, z2 in possible_combinations: # loop over the pos and negitive cases
+                freq = z1*i*AC_signals[0] + z2*j*AC_signals[1]
+                if freq > 0 and int(freq) not in ongoing_freq: # to avoid duplicates
+                    datastruct = datastruct_func(freq,
+                                                    {f"{AC_signals[0]}":z1*i,
+                                                    f"{AC_signals[1]}": z2*j},
+                                                    2, p)
+                    possible_harmonics.update({int(freq):datastruct})
 
-            #for z in range(3): # loop over the pos and negitive cases
-            freq_pos_pos = i*AC_signals[0] + j*AC_signals[1]
-            freq_pos_neg = i*AC_signals[0] - j*AC_signals[1]
-            freq_neg_pos = -i*AC_signals[0] + j*AC_signals[1]
-            if freq_pos_pos not in possible_harmonics.keys(): # to avoid duplicates
-                datastruct = datastruct_func(freq_pos_pos,
-                                                {f"{AC_signals[0]}":i,
-                                                f"{AC_signals[1]}": j},
-                                                2, k)
-                possible_harmonics.update({f"{freq_pos_pos}":datastruct})
 
-            if freq_pos_neg > 0 and freq_pos_neg not in possible_harmonics.keys(): # to avoid duplicates
-                datastruct = datastruct_func(freq_pos_neg,
-                                                {f"{AC_signals[0]}":i,
-                                                f"{AC_signals[1]}":-j},
-                                            2, k)
-                possible_harmonics.update({f"{freq_pos_neg}":datastruct})
+    return possible_harmonics, ongoing_freq
 
-            if freq_neg_pos > 0 and freq_neg_pos not in possible_harmonics.keys(): # to avoid duplicates
-                datastruct = datastruct_func(freq_neg_pos,
-                                                {f"{AC_signals[0]}":-i,
-                                                f"{AC_signals[1]}":j},
-                                            2, k)
-                possible_harmonics.update({f"{req_neg_pos}":datastruct})
+def calc_tertiary(AC_signals,  possible_harmonics={}, ongoing_freq=set(), nmax=12):
 
-    return possible_harmonics
+    AC_signals.sort()
+    AC_signals.reverse()
 
-def calc_tertiary(AC_signals,nmax=12):
+    # this are combination of harmonics we are using
+    possible_combinations = [(1,1,1),
+                             (1,1,-1),(1,-1,1),(-1,1,1),
+                             (1, -1, -1),(-1, 1,-1),(-1, -1, 1),
+                             ]
 
-    possible_harmonics = {}
-
-    AC_signals.sort().reverse()
-
-    
     for i in range(nmax):
         for j in range(nmax):
             for k in range(nmax):
-                freq_pos_pos = i*AC_signals[0] + j*AC_signals[1] + k*AC_signals[2]
-                freq_pos_neg = i*AC_signals[0] + j*AC_signals[1] - k*AC_signals[2]
-                freq_neg_pos = i*AC_signals[0] - j*AC_signals[1] + k*AC_signals[2]
-                freq_neg_neg = i*AC_signals[0] - j*AC_signals[1] + k*AC_signals[2]
-            
+                p = i + j + k 
+                for z1, z2, z3 in possible_combinations: # loop over the pos and negitive cases
+                    freq = z1*i*AC_signals[0] + z2*j*AC_signals[1] + z3*k*AC_signals[2]
+                    if freq > 0 and int(freq) not in ongoing_freq: # to avoid duplicates
+                        
+                        datastruct = datastruct_func(freq,
+                                                        {f"{AC_signals[0]}":z1*i ,
+                                                        f"{AC_signals[1]}": z2*j,
+                                                        f"{AC_signals[2]}": z3*k},
+                                                        3, p)
+                        possible_harmonics.update({int(freq):datastruct})
 
-    return possible_harmonics
+    return possible_harmonics, ongoing_freq
 
-def dual_AC(AC_signals, nmax=12):
+def single_AC(AC_signals, possible_harmonics={}, ongoing_freq=set(), nmax=12):
+
+    for i in range(1,nmax+1):
+        freq = i*AC_signals[0]
+        if int(freq) not in ongoing_freq:
+            datastruct = datastruct_func(freq,{f"{AC_signals[0]}":i},1,i)
+            possible_harmonics.update({int(freq):datastruct})
+
+    return possible_harmonics, ongoing_freq
+
+def dual_AC(AC_signals, possible_harmonics={}, ongoing_freq=set(), nmax=12):
 
     possible_harmonics = {}
-    # identify the primrary harmonics
-    primary_harms = single_AC([AC_signals[0]],nmax=nmax)
-    possible_harmonics.update(primary_harms)
+    ongoing_freq = set()
 
-    primary_harms = single_AC([AC_signals[1]],nmax=nmax)
-    possible_harmonics = append_and_check(primary_harms, possible_harmonics)
+    # identify the primrary harmonics
+    for z in range(2):
+        possible_harmonics, ongoing_freq = single_AC([AC_signals[z]],  possible_harmonics,
+                                                        ongoing_freq, nmax=nmax)
 
     # calculate the secondary harmonics
-    secondary_harms =  calc_secondrary(AC_signals,nmax=nmax)
-    possible_harmonics = append_and_check(secondary_harms, possible_harmonics)
+    possible_harmonics, ongoing_freq =  calc_secondrary(AC_signals, possible_harmonics,
+                                                                ongoing_freq,nmax=nmax)
 
-    return
+    return possible_harmonics, ongoing_freq
 
 
-def triplicate_AC(AC_signals, nmax=12):
+def triplicate_AC(AC_signals, possible_harmonics={}, ongoing_freq=set(), nmax=12):
 
 
     possible_harmonics = {}
+    ongoing_freq = set()
     # calculate the primrary harmonics
     for z in range(3):
-        primary_harms = single_AC([AC_signals[z]],nmax=nmax)
-        possible_harmonics = append_and_check(primary_harms, possible_harmonics)
+        possible_harmonics, ongoing_freq  = single_AC([AC_signals[z]], possible_harmonics,
+                                                         ongoing_freq, nmax=nmax)
 
     # calculate the secondary harmonics
     for z in range(3):
-        secondary_harms =  calc_secondrary([AC_signals[z],AC_signals[(z+1)%2]],nmax=nmax)
-        possible_harmonics = append_and_check(secondary_harms, possible_harmonics)
+        possible_harmonics, ongoing_freq = calc_secondrary([AC_signals[z], AC_signals[(z+1)%2]],
+                                                           possible_harmonics,
+                                                           ongoing_freq,
+                                                           nmax=nmax)
 
     # calculate the tertiary frequencies
+    possible_harmonics, ongoing_freq = calc_tertiary(AC_signals,possible_harmonics,
+                                                           ongoing_freq,nmax=nmax)
 
-
-    return
+    return possible_harmonics, ongoing_freq
 
 # clean function for defining the FTACV_harmonic goes args to kwargs
 def datastruct_func(freq,combination,allocation,harmonic_num):
     datastruct = FTACV_harmonic(freq=freq,
                                 combination = combination , # dict of AC harmonic combination 
                                 allocation=allocation ,# 0 for dc, 1 for primrary, 2 for secondary so on
-                                harmonic_num=harmonic_num,
-                                    )
+                                harmonic_num=harmonic_num)
+    
     return datastruct
 
-def append_and_check(incoming_dic, landing_dic):
-
-    for keys, items in incoming_dic.items():
-        if keys not in landing_dic.keys():
-            landing_dic.update({keys:items})
-    
-    return landing_dic
 
 # this is the parent class for the FTACV experiment ( this stores and links all the harmonic data structures)
 class FTACV_experiment():
@@ -210,7 +202,8 @@ class FTACV_experiment():
 
          # get the ac signals
         self._AC_signals = [x["f"] for x in MECsimstruct.AC]
-        self._AC_signals.sort().reverse()
+        self._AC_signals.sort()
+        self._AC_signals.reverse()
         self._Nac = len(self._AC_signals)
         self._Nmax = Nmax
 
@@ -224,9 +217,7 @@ class FTACV_experiment():
         elif self._Nac == 3:
             self.harmonic_alloc = triplicate_AC
         else:
-            raise ValueError("Number of AC signals are not currently supported")
-
-
+            raise ValueError("Number of AC signals greater then 3 are not currently supported")
 
         return
 
@@ -234,13 +225,25 @@ class FTACV_experiment():
     def __call__(self):
         print(self._Nac)
 
+        # add in the DC component
+
         # identify all stable possible AC harmonics
-        possible_harmonics = self.harmonic_alloc(self._AC_signals,nmax=self._Nmax)
+        # TODO: split up the primrary, secondary and tert harmonics an label in possible harmonic
+        # another issue is we use hertz labeling and not a nomeculture name
+        possible_harmonics, ongoing_freq  = self.harmonic_alloc(self._AC_signals, nmax=self._Nmax)
 
         # check the threshold and tune
 
 
+        # adjust bandwidths
+
+
+        # remove overlapping bandwidths
+
+
         # generate the harmonics
+
+
 
         return  possible_harmonics
 
@@ -251,12 +254,24 @@ class FTACV_experiment():
 class FTACV_harmonic:
 
     freq: float
-    combination: dict # list of AC harmonic combination 
+    combination: dict # list of AC harmonic combination {Hz: scalar multi}
     allocation: int # 0 for dc, 1 for primrary, 2 for secondary so on
     #harmonic: Optional[np.array] # this stores the harmonic but that information comes later
     harmonic_num: int # abs sum of the combination
     bandwith: float = 4 # defaults to 4 Hz
 
     def __repr__(self):
+
+        hertz = []
+        for keys in self.combination.keys():
+            hertz.append(keys)
+
+        hertz.sort()
+        hertz.reverse()
+        s = f"{self.combination[hertz[0]]}"
+        if len(hertz) > 1: 
+            for keys in hertz[1:]:
+                s += f",{self.combination[keys]}"
+
         # put something here so people know whats in the dataclass
-        return f"""Harmonic information for {self.freq} Hz, as the {self.harmonic_num} harmonic of {self.allocation}."""
+        return f"""Harmonic information for {s} at {self.freq} Hz, as the {self.harmonic_num} harmonic of {self.allocation}."""
