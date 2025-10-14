@@ -8,7 +8,7 @@ import mecsim_utils.processing.utils as mecUtils
 import mecsim_utils.processing.auto_ftacv as ftcount
 
 # load in the sample testing stuff
-from tests.unittests.fixture_ftacv import current_factory
+from tests.unittests.fixture_ftacv import current_factory, inp_factory
 import mecsim_utils.processing.auto_ftacv as ftcount
 
 
@@ -56,7 +56,7 @@ def test_auto_harmcount(current_factory):
     print(Currenttot.shape)
     # calculate a rough N estimate
     Ftacv_Class = ftcount.FTACV_experiment(MECsimstruct)
-    harmonics = Ftacv_Class.ftacv_func(Currenttot)
+    harmonics = Ftacv_Class(Currenttot)
     #Nprim = ftcount.harmoniccounter(current_factory, nsimdeci, PSdiff=1.)
 
     

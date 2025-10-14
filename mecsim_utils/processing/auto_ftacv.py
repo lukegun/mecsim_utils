@@ -31,7 +31,6 @@ def bandwidthallocator(frequency_current, frequency_space, MECsimstruct, label, 
 
     # get the ac signals
     AC_signals = [x["f"] for x in MECsimstruct.AC]
-    
     # constant values
     constant= False
     if constant:
@@ -73,6 +72,9 @@ def bandwidthallocator(frequency_current, frequency_space, MECsimstruct, label, 
 
 def AC_threshold_check(frequency_current, frequency_space, harmonics, threshold=2.30):
 
+    # get the frequency increment
+    df = frequency_space[1]
+
     # this will need to be a standa alone function
     ln_current = np.log(frequency_current)
 
@@ -90,14 +92,15 @@ def AC_threshold_check(frequency_current, frequency_space, harmonics, threshold=
     fit = func(frequency_space[:n])
 
     # compare ln_current to the fit over the harmonics
-    lndiff = ln_current - fit
-
-    harmonics = remove_unwanted_feats(harmonics, lndiff, threshold)
+    lndiff = ln_current[:n]- fit
+    print(harmonics.keys())
+    print(harmonics[1].keys())
+    harmonics = calibrate_harms(harmonics, ln_current, lndiff, df, threshold)
 
     return harmonics
 
 # this probably isn't required but easiest to do for time being
-def remove_unwanted_feats(harmonics, lndiff, threshold):
+def calibrate_harms(harmonics, ln_current, lndiff, df, threshold):
 
     # check how many allocations are in the system
     harms = list(harmonics.keys())
@@ -105,13 +108,19 @@ def remove_unwanted_feats(harmonics, lndiff, threshold):
 
     # check the primrary harmonics
     drop = []
-    for harms in harmonics[0]:
-
+    for i in range(1,len(harmonics[1].keys())+1):
+        print(i, "f")
         # get band of interest
+        exist, temp_harms= check_harm_band(harmonics[1][str(i)], ln_current, lndiff, df, threshold)
 
+        if exist:
+            harmonics[1][i] = temp_harms
+        else:
+            # TODO drop all other related harmonics
+            break
         # RECURSIVE
         # check threshold add to drop and continue
-        if 
+        
 
     # check secondary
         
@@ -129,6 +138,37 @@ def remove_unwanted_feats(harmonics, lndiff, threshold):
 
     return harmonics
 
+def check_harm_band(harms, ln_current, lndiff, df, threshold):
+
+    AC_freq = harms.freq
+
+    int_harmband_1 = int((AC_freq - 0.5)/df)
+    int_harmband_2 = int((AC_freq + 0.5)/df)
+
+    print("CUNT",AC_freq,(AC_freq - 0.5)/df, (AC_freq + 0.5)/df)
+
+    # check if the freq is above a threshold
+    adjustedband = False
+    if np.max(lndiff[int_harmband_1:int_harmband_2]) > threshold:
+        exist = True
+        # adjust the bandwidth
+        for i in range(1,24):
+            i1 = int((AC_freq - i*0.1)/df)
+            i2 = int((AC_freq + i*0.1)/df)
+            # detect if the bandwidth is appropriate
+            if np.max(lndiff[i1:i2]) < threshold:
+                harms.bandwith = 2*i*0.5
+                adjustedband = True
+                continue
+
+        if adjustedband:
+            harms.bandwith = 2*24*0.5
+        
+    else:
+        exist = False
+
+    return exist, harms
+
 
 def frequency_transform(Currenttot, tot_time):
 
@@ -142,17 +182,17 @@ def frequency_transform(Currenttot, tot_time):
 
 def calc_primrary(AC_signal,  possible_harmonics={}, ongoing_freq=set(), nmax=12):
 
-    possible_harmonics={}
-
+    temp_harmonics={}
+    print(ongoing_freq)
     for i in range(1,nmax+1):
         freq = i*AC_signal
         if int(freq) not in ongoing_freq:
             ongoing_freq.add(int(freq))
             s = f"{i}"
             datastruct = datastruct_func(freq,{AC_signal:i},1,i)
-            possible_harmonics.update({s:datastruct})
+            temp_harmonics.update({s:datastruct})
 
-    return possible_harmonics, ongoing_freq
+    return temp_harmonics, ongoing_freq
 
 def calc_secondrary(AC_signals, ongoing_freq=set(), nmax=12):
 
@@ -216,8 +256,7 @@ def single_AC(AC_signals, possible_harmonics={}, ongoing_freq=set(), nmax=12):
 
     possible_harmonics = {1:{}}
     ongoing_freq = set()
-    
-    temp, ongoing_freq = calc_primrary(AC_signals, ongoing_freq, nmax=nmax)
+    temp, ongoing_freq = calc_primrary(AC_signals[0], ongoing_freq = ongoing_freq, nmax=nmax)
     possible_harmonics[1].update(temp)
 
     return possible_harmonics, ongoing_freq
@@ -290,7 +329,7 @@ class FTACV_experiment():
         self._Nmax = Nmax
 
         assert self._Nac != 0, "ERROR: no AC signal found for experiment"
-        
+        print("hello",  self._AC_signals,self._Nac)
         # confirm that the AC allocation function is right for number of AC_signals
         if self._Nac == 1:
             self.harmonic_alloc = single_AC
@@ -319,6 +358,7 @@ class FTACV_experiment():
         # check the threshold and tune
         frequency_current, frequency_space = frequency_transform(Currenttot, self.MECsimstruct.time_tot)
 
+        print("FUCK",frequency_space[0],frequency_space[1])
 
         # adjust bandwidths
         AC_threshold_check(frequency_current, frequency_space, possible_harmonics, threshold=2.30)
