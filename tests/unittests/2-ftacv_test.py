@@ -55,7 +55,11 @@ def test_auto_harmcount(current_factory):
 
     print(Currenttot.shape)
     # calculate a rough N estimate
-    Nprim = ftcount.harmoniccounter(current_factory, nsimdeci, PSdiff=1.)
+    Ftacv_Class = ftcount.FTACV_experiment(MECsimstruct)
+    harmonics = Ftacv_Class.ftacv_func(Currenttot)
+    #Nprim = ftcount.harmoniccounter(current_factory, nsimdeci, PSdiff=1.)
+
+    
 
     return
 

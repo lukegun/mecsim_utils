@@ -71,6 +71,64 @@ def bandwidthallocator(frequency_current, frequency_space, MECsimstruct, label, 
 
     return 
 
+def AC_threshold_check(frequency_current, frequency_space, harmonics, threshold=2.30):
+
+    # this will need to be a standa alone function
+    ln_current = np.log(frequency_current)
+
+    # Smooth the max of the background and fit
+    n = int(frequency_space.shape[0]/2)
+    fit = max_filter1d_valid(ln_current[:n],60)
+    
+    # account for windowing function
+    n2 = fit.shape[0]
+    diff = int((n - n2)/2)
+
+    # could add an additional process here to remove the known harmonic info
+    p=np.polyfit(frequency_space[diff:n-diff],fit, 7)
+    func = np.poly1d(p)
+    fit = func(frequency_space[:n])
+
+    # compare ln_current to the fit over the harmonics
+    lndiff = ln_current - fit
+
+    harmonics = remove_unwanted_feats(harmonics, lndiff, threshold)
+
+    return harmonics
+
+# this probably isn't required but easiest to do for time being
+def remove_unwanted_feats(harmonics, lndiff, threshold):
+
+    # check how many allocations are in the system
+    harms = list(harmonics.keys())
+    harms.sort()
+
+    # check the primrary harmonics
+    drop = []
+    for harms in harmonics[0]:
+
+        # get band of interest
+
+        # RECURSIVE
+        # check threshold add to drop and continue
+        if 
+
+    # check secondary
+        
+        # drop if primrary has been droped
+
+        # threshold check
+
+
+
+    # check tertiary
+            
+        # drop if secondary has been droped
+
+        # threshold check
+
+    return harmonics
+
 
 def frequency_transform(Currenttot, tot_time):
 
@@ -216,14 +274,16 @@ def datastruct_func(freq,combination,allocation,harmonic_num):
 
 
 # this is the parent class for the FTACV experiment ( this stores and links all the harmonic data structures)
+# TODO MAKE THIS MORE LIKE A CLASS WHERE SELF CONTAINED
 class FTACV_experiment():
 
 
 
     def __init__(self, MECsimstruct, Nmax = 12):
 
-         # get the ac signals
-        self._AC_signals = [x["f"] for x in MECsimstruct.AC]
+        # get the ac signals
+        self.MECsimstruct = MECsimstruct
+        self._AC_signals = [x["f"] for x in self.MECsimstruct.AC]
         self._AC_signals.sort()
         self._AC_signals.reverse()
         self._Nac = len(self._AC_signals)
@@ -244,21 +304,24 @@ class FTACV_experiment():
         return
 
     # this identifies all the possible harmonics and 
-    def __call__(self):
+    def __call__(self,Currenttot):
         print(self._Nac)
-
-        # add in the DC component
 
         # identify all stable possible AC harmonics
         # TODO: split up the primrary, secondary and tert harmonics an label in possible harmonic
         # another issue is we use hertz labeling and not a nomeculture name
         possible_harmonics, ongoing_freq  = self.harmonic_alloc(self._AC_signals, nmax=self._Nmax)
 
+        # add in the DC component
+
+
+
         # check the threshold and tune
+        frequency_current, frequency_space = frequency_transform(Currenttot, self.MECsimstruct.time_tot)
 
 
         # adjust bandwidths
-
+        AC_threshold_check(frequency_current, frequency_space, possible_harmonics, threshold=2.30)
 
         # remove overlapping bandwidths
 
