@@ -70,7 +70,7 @@ def bandwidthallocator(frequency_current, frequency_space, MECsimstruct, label, 
 
     return 
 
-def AC_threshold_check(frequency_current, frequency_space, harmonics, threshold=2.30):
+def AC_threshold_check(frequency_current, frequency_space, harmonics, threshold=2.30, nmax=12):
 
     # get the frequency increment
     df = frequency_space[1]
@@ -93,14 +93,14 @@ def AC_threshold_check(frequency_current, frequency_space, harmonics, threshold=
 
     # compare ln_current to the fit over the harmonics
     lndiff = ln_current[:n]- fit
-    print(harmonics.keys())
+    
     print(harmonics[1].keys())
-    harmonics = calibrate_harms(harmonics, ln_current, lndiff, df, threshold)
+    harmonics = calibrate_harms(harmonics, ln_current, lndiff, df, threshold,nmax)
 
     return harmonics
 
 # this probably isn't required but easiest to do for time being
-def calibrate_harms(harmonics, ln_current, lndiff, df, threshold):
+def calibrate_harms(harmonics, ln_current, lndiff, df, threshold, nmax):
 
     # check how many allocations are in the system
     harms = list(harmonics.keys())
@@ -117,9 +117,13 @@ def calibrate_harms(harmonics, ln_current, lndiff, df, threshold):
             harmonics[1][i] = temp_harms
         else:
             # TODO drop all other related harmonics
+            term_harm = i
             break
         # RECURSIVE
         # check threshold add to drop and continue
+
+    for h in harms:
+        # 
         
 
     # check secondary
@@ -361,7 +365,7 @@ class FTACV_experiment():
         print("FUCK",frequency_space[0],frequency_space[1])
 
         # adjust bandwidths
-        AC_threshold_check(frequency_current, frequency_space, possible_harmonics, threshold=2.30)
+        AC_threshold_check(frequency_current, frequency_space, possible_harmonics, threshold=2.30, nmax=self._Nmax)
 
         # remove overlapping bandwidths
 
