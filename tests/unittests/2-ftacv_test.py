@@ -5,7 +5,7 @@ These tests validate that the ftacv processing all work
 import mecsim_utils.processing.auto_ftacv as ftcount
 
 # load in the sample testing stuff
-
+from tests.unittests.fixture_ftacv import inp_factory, current_factory # fixtures
 
 def test_frequency_transform(current_factory):
     Currenttot, MECsimstruct = current_factory

@@ -6,7 +6,8 @@ from mecsim_utils.transformations.inp.datamodel import INP_DataModel
 import mecsim_utils.processing.utils as mecUtils
 
 # load in the sample testing stuff
-from tests.unittests.fixture_ftacv import inp_factory
+from tests.unittests.fixture_ftacv import inp_factory # fixtures
+
 
 def inp_split(string):
     return string.split("!")[0].strip("\t\n, ")

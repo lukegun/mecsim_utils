@@ -70,13 +70,13 @@ def bandwidthallocator(frequency_current, frequency_space, MECsimstruct, label, 
 
     return 
 
-def AC_threshold_check(frequency_current, frequency_space, harmonics, threshold=2.30, nmax=12):
+def AC_threshold_check(frequency_current, frequency_space, harmonics, ongoing_freq, threshold=2.30, nmax=12):
 
     # get the frequency increment
     df = frequency_space[1]
 
     # this will need to be a standa alone function
-    ln_current = np.log(frequency_current)
+    ln_current = np.log(np.abs(frequency_current))
 
     # Smooth the max of the background and fit
     n = int(frequency_space.shape[0]/2)
@@ -93,81 +93,101 @@ def AC_threshold_check(frequency_current, frequency_space, harmonics, threshold=
 
     # compare ln_current to the fit over the harmonics
     lndiff = ln_current[:n]- fit
-    
-    print(harmonics[1].keys())
-    harmonics = calibrate_harms(harmonics, ln_current, lndiff, df, threshold,nmax)
+
+    harmonics = calibrate_harms(harmonics, ongoing_freq, lndiff, df, threshold)
 
     return harmonics
 
 # this probably isn't required but easiest to do for time being
-def calibrate_harms(harmonics, ln_current, lndiff, df, threshold, nmax):
+def calibrate_harms(harmonics, ongoing_freq, lndiff, df, threshold):
 
     # check how many allocations are in the system
     harms = list(harmonics.keys())
     harms.sort()
 
     # check the primrary harmonics
-    drop = []
-    for i in range(1,len(harmonics[1].keys())+1):
-        print(i, "f")
-        # get band of interest
-        exist, temp_harms= check_harm_band(harmonics[1][str(i)], ln_current, lndiff, df, threshold)
+    for j in range(1,len(harms)+1):
+        for i in range(1,len(list(harmonics[j].keys()))+1):
+            # get band of interest
+            exist, temp_harms= check_harm_band(harmonics[j][str(i)], ongoing_freq, lndiff, df, threshold)
 
-        if exist:
-            harmonics[1][i] = temp_harms
-        else:
-            # TODO drop all other related harmonics
-            term_harm = i
-            break
-        # RECURSIVE
-        # check threshold add to drop and continue
+            if exist:
+                harmonics[1][i] = temp_harms
+            else:
+                # TODO drop all other related harmonics
+                term_harm = str(i)
+                break
+            # RECURSIVE
+            # check threshold add to drop and continue
 
-    for h in harms:
-        # 
-        
-
-    # check secondary
-        
-        # drop if primrary has been droped
-
-        # threshold check
-
-
-
-    # check tertiary
-            
-        # drop if secondary has been droped
-
-        # threshold check
+        # delete the primrary harmonics
+        for h in harms[j:]:
+            keys = list(harmonics[h].keys())
+            for hi in keys:
+                if term_harm == hi.split("-")[j-1]:
+                    del harmonics[h][hi]
 
     return harmonics
 
-def check_harm_band(harms, ln_current, lndiff, df, threshold):
+def check_harm_band(harms, ongoing_freq, lndiff, df, threshold):
 
     AC_freq = harms.freq
 
     int_harmband_1 = int((AC_freq - 0.5)/df)
     int_harmband_2 = int((AC_freq + 0.5)/df)
 
-    print("CUNT",AC_freq,(AC_freq - 0.5)/df, (AC_freq + 0.5)/df)
+    # 
+    lndiff = np.where(lndiff<0,0,lndiff)
 
     # check if the freq is above a threshold
     adjustedband = False
-    if np.max(lndiff[int_harmband_1:int_harmband_2]) > threshold:
+    test_freq = 0.25
+    # get the max value in the diff 
+    peak_current = np.max(lndiff[int_harmband_1:int_harmband_2])
+    if peak_current > threshold:
         exist = True
         # adjust the bandwidth
-        for i in range(1,24):
-            i1 = int((AC_freq - i*0.1)/df)
-            i2 = int((AC_freq + i*0.1)/df)
-            # detect if the bandwidth is appropriate
-            if np.max(lndiff[i1:i2]) < threshold:
-                harms.bandwith = 2*i*0.5
+        n = 24
+        for i in range(1,n):
+            i1 = int((AC_freq - i*test_freq)/df)
+            i2 = int((AC_freq + i*test_freq)/df)
+            # detect if the bandwidth is appropriate minimum
+            if np.average(lndiff[i1:i2]) < peak_current*0.2:
+                minband = 2*i*test_freq
                 adjustedband = True
-                continue
+                break
 
-        if adjustedband:
-            harms.bandwith = 2*24*0.5
+        if not adjustedband:
+            minband = 2*(n-1)*test_freq
+
+        # calculate the maximum bandwidth
+        # TODO make rounding safe
+        ind = ongoing_freq.index(int(AC_freq)) # we use int as its a quick truncation to a labelled harm
+        if ind == 0:
+            bandidthrange = (AC_freq,ongoing_freq[ind+1]-AC_freq)
+        else:
+            bandidthrange = (AC_freq-ongoing_freq[ind-1],ongoing_freq[ind+1]-AC_freq)
         
+        # TODO add something to prevent edge case of negitive here
+        max_range = (min(bandidthrange) - minband) # this takes the average between largest and smallest
+
+        # some arbitrary rule to attempt to estimate the 
+        # Edge cases (massive AC harmonics)
+        # to harmonic overlaps (KILL harmonics)
+        bandwidth = min(max_range,40,2*6*minband)
+        print(ind,AC_freq,ongoing_freq[ind],bandidthrange,max_range,bandwidth,minband)
+
+
+        # TODO use some basic set of rules to take the average of the two abovve or some failsafe rules for the edge cases
+        #harms.bandwith
+        # NOTE BANDWIDTH IS RANGE OF WINDOW
+        if exist:
+            if minband not in [0.5, 1.] and ind==8:
+                plt.plot(lndiff[i1:i2])
+                plt.savefig("test2.png")
+                plt.close()
+                exit(1)
+        print("ohno",harms,harms.bandwith,adjustedband ,np.max(lndiff[i1:i2]),i1,i2)
     else:
         exist = False
 
@@ -184,10 +204,9 @@ def frequency_transform(Currenttot, tot_time):
 
     return frequency_curr, frequency_space
 
-def calc_primrary(AC_signal,  possible_harmonics={}, ongoing_freq=set(), nmax=12):
+def calc_primrary(AC_signal, ongoing_freq=set(), nmax=12):
 
     temp_harmonics={}
-    print(ongoing_freq)
     for i in range(1,nmax+1):
         freq = i*AC_signal
         if int(freq) not in ongoing_freq:
@@ -354,6 +373,10 @@ class FTACV_experiment():
         # TODO: split up the primrary, secondary and tert harmonics an label in possible harmonic
         # another issue is we use hertz labeling and not a nomeculture name
         possible_harmonics, ongoing_freq  = self.harmonic_alloc(self._AC_signals, nmax=self._Nmax)
+        
+        # convert ongoing freqency to sorted listy
+        ongoing_freq = list(ongoing_freq)
+        ongoing_freq.sort()
 
         # add in the DC component
 
@@ -365,7 +388,8 @@ class FTACV_experiment():
         print("FUCK",frequency_space[0],frequency_space[1])
 
         # adjust bandwidths
-        AC_threshold_check(frequency_current, frequency_space, possible_harmonics, threshold=2.30, nmax=self._Nmax)
+        AC_threshold_check(frequency_current, frequency_space, possible_harmonics, 
+                                        ongoing_freq,threshold=2.3, nmax=self._Nmax)
 
         # remove overlapping bandwidths
 
