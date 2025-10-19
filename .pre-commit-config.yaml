@@ -1,19 +1,29 @@
 repos:
   # repository with hook definitions
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0  # release version of the repo
-    hooks:  # list of hooks from the repo to include in this project
-    -   id: end-of-file-fixer
-    -   id: trailing-whitespace
-    -   id: check-yaml
-        args: ['--unsafe']  # add arguments to `check-yaml`
--   repo: https://github.com/psf/black
-    rev: 25.9.0
-    hooks:
-    - id: black
-      language_version: python3.12
--   repo: https://github.com/pycqa/flake8
-    rev: 7.3.0
-    hooks:
-    - id: flake8
-      blocking: false # This hook will not block the commit if it fails
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v6.0.0  # release version of the repo
+  hooks:  # list of hooks from the repo to include in this project
+  -   id: end-of-file-fixer
+  -   id: trailing-whitespace
+  -   id: check-yaml
+      args: ['--unsafe']  # add arguments to `check-yaml`
+- repo: https://github.com/psf/black
+  rev: 25.9.0
+  hooks:
+  - id: black
+    language_version: python3.12
+- repo: https://github.com/pycqa/flake8
+  rev: 7.3.0
+  hooks:
+  - id: flake8
+    blocking: false # This hook will not block the commit if it fails
+- repo: local
+  hooks:
+  - id: pytest
+    name: pytest
+    entry: python -m pytest tests/unittests/
+    language: system
+    types: [python]
+    pass_filenames: false
+    #always_run: true
+    blocking: false # This hook will not block the commit if it fail
