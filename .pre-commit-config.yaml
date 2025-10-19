@@ -1,13 +1,11 @@
 repos:
-- repo: git@github.com:lukegun/mecsim_utils.git
+- repo: local #git@github.com:lukegun/mecsim_utils.git
   # Ruff version.
-  rev: v0.14.0
+  #rev: v0.14.0
   hooks:
-    # Run the formatter.
-    - id: ruff-check
-#    - id: ruff-format
-    #- id: pytest
-    #  name: pytest
-    #  entry: python -m pytest -s --cov=mecsim_utils tests/unittests/
-    #  language: system
-    #  types: [python]
+    # Run the linter.
+    - id: black
+      name: black_linter
+      entry: pwd
+      args: []
+      language: python

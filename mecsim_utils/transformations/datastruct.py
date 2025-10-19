@@ -51,10 +51,14 @@ class Base_MEC:
 
     # nondefault stuff
     # mechanism specific
-    et_mech: bool = False  # butlervolmer or marcus hushpre_eq": 10,  # Pre-equilibrium switch: 0=stay with use
+    et_mech: bool = (
+        False  # butlervolmer or marcus hushpre_eq": 10,  # Pre-equilibrium switch: 0=stay with use
+    )
     pre_eq: bool = False  # if or not to apply pre-equilbrum
     nerev: int = 1  # number of Erev lines
-    adv_v: int = 0  # use advanced voltage ramp (0 = E_start=E_end, 1 = use advanced ramp below, 2=From file 'EInput.txt')
+    adv_v: int = (
+        0  # use advanced voltage ramp (0 = E_start=E_end, 1 = use advanced ramp below, 2=From file 'EInput.txt')
+    )
     nac: int = 0  # number of AC sources
     nsol: int = 2  # number of analyts in solution
     ncap: int = 1  # number of capitance

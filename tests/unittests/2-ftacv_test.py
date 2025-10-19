@@ -5,7 +5,8 @@ These tests validate that the ftacv processing all work
 import mecsim_utils.processing.auto_ftacv as ftcount
 
 # load in the sample testing stuff
-from tests.unittests.fixture_ftacv import inp_factory, current_factory # fixtures
+from tests.unittests.fixture_ftacv import inp_factory, current_factory  # fixtures
+
 
 def test_frequency_transform(current_factory):
     Currenttot, MECsimstruct = current_factory
@@ -14,12 +15,12 @@ def test_frequency_transform(current_factory):
         Currenttot, MECsimstruct.time_tot
     )
 
-    assert Currenttot.shape == frequency_curr.shape, (
-        "ERROR: returned current in f space has the wrong shape"
-    )
-    assert Currenttot.shape == frequency_space.shape, (
-        "ERROR: frequency space returned something wrong"
-    )
+    assert (
+        Currenttot.shape == frequency_curr.shape
+    ), "ERROR: returned current in f space has the wrong shape"
+    assert (
+        Currenttot.shape == frequency_space.shape
+    ), "ERROR: frequency space returned something wrong"
 
     return
 

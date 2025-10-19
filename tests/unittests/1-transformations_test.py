@@ -6,7 +6,7 @@ from mecsim_utils.transformations.inp.datamodel import INP_DataModel
 import mecsim_utils.processing.utils as mecUtils
 
 # load in the sample testing stuff
-from tests.unittests.fixture_ftacv import inp_factory # fixtures
+from tests.unittests.fixture_ftacv import inp_factory  # fixtures
 
 
 def inp_split(string):
@@ -48,9 +48,9 @@ def test_INP_2_data(inp_factory):
     )
     check_inp_line(input_INP, transformed_lines, comment, 0, len(input_INP))
 
-    assert len(input_INP) == len(transformed_lines), (
-        "ERROR: number of lines don't match"
-    )
+    assert len(input_INP) == len(
+        transformed_lines
+    ), "ERROR: number of lines don't match"
 
 
 # this checks if MECSIM works right
