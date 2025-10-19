@@ -1,11 +1,6 @@
 repos:
-- repo: local #git@github.com:lukegun/mecsim_utils.git
-  # Ruff version.
-  #rev: v0.14.0
-  hooks:
-    # Run the linter.
+-   repo: https://github.com/psf/black
+    rev: stable
+    hooks:
     - id: black
-      name: black_linter
-      entry: pwd
-      args: []
-      language: python
+      language_version: python3.12
