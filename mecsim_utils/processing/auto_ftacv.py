@@ -112,28 +112,31 @@ def calibrate_harms(harmonics, ongoing_freq, lndiff, df, threshold):
     harms.sort()
 
     # check the primrary harmonics
-    for j in range(1, len(harms) + 1):
-        for i in range(1, len(list(harmonics[j].keys())) + 1):
+    print("shit", harms)
+    for j in harms:
+        harmlists = list(harmonics[j].keys())
+        print("poop", j)
+        for i in harmlists:
             # get band of interest
             exist, temp_harms = check_harm_band(
-                harmonics[j][str(i)], ongoing_freq, lndiff, df, threshold
+                harmonics[j][i], ongoing_freq, lndiff, df, threshold
             )
 
+            print(j, i, "fuck", exist)
+
             if exist:
-                harmonics[1][i] = temp_harms
+                harmonics[j][i] = temp_harms
             else:
-                # TODO drop all other related harmonics
-                term_harm = str(i)
-                break
+                # TODO drop all other related harmonics  OPTIMISE THIS SOMEHOW
+                del harmonics[j][i]
+
             # RECURSIVE
             # check threshold add to drop and continue
 
-        # delete the primrary harmonics
-        for h in harms[j:]:
-            keys = list(harmonics[h].keys())
-            for hi in keys:
-                if term_harm == hi.split("-")[j - 1]:
-                    del harmonics[h][hi]
+        # if empty delete
+        print("CUNT", list(harmonics[j].keys()))
+        if len(harmonics[j]) == 0:
+            del harmonics[j]
 
     return harmonics
 
@@ -176,13 +179,14 @@ def check_harm_band(harms, ongoing_freq, lndiff, df, threshold):
         )  # we use int as its a quick truncation to a labelled harm
         if ind == 0:
             bandidthrange = (AC_freq, ongoing_freq[ind + 1] - AC_freq)
+        elif ind + 1 == len(ongoing_freq):
+            bandidthrange = (ongoing_freq[ind - 1] - AC_freq,)
         else:
             bandidthrange = (
                 AC_freq - ongoing_freq[ind - 1],
                 ongoing_freq[ind + 1] - AC_freq,
             )
 
-        # TODO add something to prevent edge case of negitive here
         max_range = (
             min(bandidthrange) - minband
         )  # this takes the average between largest and smallest
@@ -190,29 +194,8 @@ def check_harm_band(harms, ongoing_freq, lndiff, df, threshold):
         # some arbitrary rule to attempt to estimate the
         # Edge cases (massive AC harmonics)
         # to harmonic overlaps (KILL harmonics)
-        bandwidth = min(max_range, 40, 2 * 6 * minband)
-        print(
-            ind,
-            AC_freq,
-            ongoing_freq[ind],
-            bandidthrange,
-            max_range,
-            bandwidth,
-            minband,
-        )
+        harms.bandwith = min(max_range, 40, 2 * 6 * minband)
 
-        # TODO use some basic set of rules to take the average of the two abovve or some failsafe rules for the edge cases
-        # harms.bandwith
-        # NOTE BANDWIDTH IS RANGE OF WINDOW
-        if exist:
-            if minband not in [0.5, 1.0] and ind == 8:
-                plt.plot(lndiff[i1:i2])
-                plt.savefig("test2.png")
-                plt.close()
-                exit(1)
-        print(
-            "ohno", harms, harms.bandwith, adjustedband, np.max(lndiff[i1:i2]), i1, i2
-        )
     else:
         exist = False
 
@@ -230,12 +213,12 @@ def frequency_transform(Currenttot, tot_time):
     return frequency_curr, frequency_space
 
 
-def calc_primrary(AC_signal, ongoing_freq=set(), nmax=12):
+def calc_primrary(AC_signal, Max_freq, ongoing_freq=set(), nmax=12):
 
     temp_harmonics = {}
     for i in range(1, nmax + 1):
         freq = i * AC_signal
-        if int(freq) not in ongoing_freq:
+        if int(freq) not in ongoing_freq and freq < Max_freq:
             ongoing_freq.add(int(freq))
             s = f"{i}"
             datastruct = datastruct_func(freq, {AC_signal: i}, 1, i)
@@ -244,7 +227,7 @@ def calc_primrary(AC_signal, ongoing_freq=set(), nmax=12):
     return temp_harmonics, ongoing_freq
 
 
-def calc_secondrary(AC_signals, ongoing_freq=set(), nmax=12):
+def calc_secondrary(AC_signals, Max_freq, ongoing_freq=set(), nmax=12):
 
     possible_combinations = [(1, 1), (1, -1), (-1, 1)]
 
@@ -259,7 +242,9 @@ def calc_secondrary(AC_signals, ongoing_freq=set(), nmax=12):
             p = i + j
             for z1, z2 in possible_combinations:  # loop over the pos and negitive cases
                 freq = z1 * i * AC_signals[0] + z2 * j * AC_signals[1]
-                if freq > 0 and int(freq) not in ongoing_freq:  # to avoid duplicates
+                if (
+                    freq > 0 and int(freq) not in ongoing_freq and freq < Max_freq
+                ):  # to avoid duplicates
                     ongoing_freq.add(int(freq))
                     s = f"{z1*i}:{z2*j}"
                     datastruct = datastruct_func(
@@ -270,7 +255,7 @@ def calc_secondrary(AC_signals, ongoing_freq=set(), nmax=12):
     return possible_harmonics, ongoing_freq
 
 
-def calc_tertiary(AC_signals, ongoing_freq=set(), nmax=12):
+def calc_tertiary(AC_signals, Max_freq, ongoing_freq=set(), nmax=12):
 
     AC_signals.sort()
     AC_signals.reverse()
@@ -303,7 +288,7 @@ def calc_tertiary(AC_signals, ongoing_freq=set(), nmax=12):
                         + z3 * k * AC_signals[2]
                     )
                     if (
-                        freq > 0 and int(freq) not in ongoing_freq
+                        freq > 0 and int(freq) not in ongoing_freq and freq < Max_freq
                     ):  # to avoid duplicates
                         ongoing_freq.add(int(freq))
                         s = f"{z1*i}:{z2*j}:{z3*k}"
@@ -322,56 +307,107 @@ def calc_tertiary(AC_signals, ongoing_freq=set(), nmax=12):
     return possible_harmonics, ongoing_freq
 
 
-def single_AC(AC_signals, possible_harmonics={}, ongoing_freq=set(), nmax=12):
+def single_AC(AC_signals, Max_freq, possible_harmonics={}, ongoing_freq=set(), nmax=12):
 
     possible_harmonics = {1: {}}
     ongoing_freq = set()
     temp, ongoing_freq = calc_primrary(
-        AC_signals[0], ongoing_freq=ongoing_freq, nmax=nmax
+        AC_signals[0], Max_freq, ongoing_freq=ongoing_freq, nmax=nmax
     )
     possible_harmonics[1].update(temp)
 
     return possible_harmonics, ongoing_freq
 
 
-def dual_AC(AC_signals, nmax=12):
+def dual_AC(AC_signals, Max_freq, nmax=12):
 
     possible_harmonics = {1: {}, 2: {}}
     ongoing_freq = set()
 
     # identify the primrary harmonics
     for z in range(2):
-        temp, ongoing_freq = calc_primrary(AC_signals[z], ongoing_freq, nmax=nmax)
+        temp, ongoing_freq = calc_primrary(
+            AC_signals[z], Max_freq, ongoing_freq, nmax=nmax
+        )
+        temp = rename_labels2D(temp, z)
         possible_harmonics[1].update(temp)
 
     # calculate the secondary harmonics
-    temp, ongoing_freq = calc_secondrary(AC_signals, ongoing_freq, nmax=nmax)
+    temp, ongoing_freq = calc_secondrary(AC_signals, Max_freq, ongoing_freq, nmax=nmax)
     possible_harmonics[2].update(temp)
 
     return possible_harmonics, ongoing_freq
 
 
-def triplicate_AC(AC_signals, nmax=12):
+def triplicate_AC(AC_signals, Max_freq, nmax=12):
 
     possible_harmonics = {1: {}, 2: {}, 3: {}}
     ongoing_freq = set()
     # calculate the primrary harmonics
     for z in range(3):
-        temp, ongoing_freq = calc_primrary(AC_signals[z], ongoing_freq, nmax=nmax)
+        temp, ongoing_freq = calc_primrary(
+            AC_signals[z], Max_freq, ongoing_freq, nmax=nmax
+        )
+        temp = rename_labels3D(temp, z)
         possible_harmonics[1].update(temp)
 
     # calculate the secondary harmonics
     for z in range(3):
         temp, ongoing_freq = calc_secondrary(
-            [AC_signals[z], AC_signals[(z + 1) % 2]], ongoing_freq, nmax=nmax
+            [AC_signals[z], AC_signals[(z + 1) % 2]], Max_freq, ongoing_freq, nmax=nmax
         )
+        labels = (z, (z + 1) % 2)
+        temp = rename_labels3D_2(temp, labels)
         possible_harmonics[2].update(temp)
 
     # calculate the tertiary frequencies
-    temp, ongoing_freq = calc_tertiary(AC_signals, ongoing_freq, nmax=nmax)
+    temp, ongoing_freq = calc_tertiary(AC_signals, Max_freq, ongoing_freq, nmax=nmax)
     possible_harmonics[3].update(temp)
 
     return possible_harmonics, ongoing_freq
+
+
+# this is needed to rename the system
+def rename_labels2D(harms_dic_old, labels):
+
+    harms_dic_new = {}
+    l = [0, 0]
+    for keys, items in harms_dic_old.items():
+        l[labels] = keys
+        new_label = "{}:{}".format(*l)
+        harms_dic_new.update({new_label: items})
+
+    return harms_dic_new
+
+
+# this is needed to rename the system
+def rename_labels3D(harms_dic_old, labels):
+
+    harms_dic_new = {}
+    l = [0, 0, 0]
+    for keys, items in harms_dic_old.items():
+        l[labels] = keys
+        new_label = "{}:{}:{}".format(*l)
+        harms_dic_new.update({new_label: items})
+
+    return harms_dic_new
+
+
+# this is needed to rename the system
+def rename_labels3D_2(harms_dic_old, labels):
+
+    print(labels, """fucker""")
+
+    harms_dic_new = {}
+    l = [0, 0, 0]
+    for keys, items in harms_dic_old.items():
+        s = keys.split(":")
+        l[labels[0]] = s[0]
+        l[labels[1]] = s[1]
+        new_label = "{}:{}:{}".format(*l)
+        harms_dic_new.update({new_label: items})
+
+    return harms_dic_new
 
 
 # clean function for defining the FTACV_harmonic goes args to kwargs
@@ -420,23 +456,24 @@ class FTACV_experiment:
     def __call__(self, Currenttot):
         print(self._Nac)
 
+        # check the threshold and tune
+        frequency_current, frequency_space = frequency_transform(
+            Currenttot, self.MECsimstruct.time_tot
+        )
+        self.max_freq = np.max(frequency_space)
+
         # identify all stable possible AC harmonics
         # TODO: split up the primrary, secondary and tert harmonics an label in possible harmonic
         # another issue is we use hertz labeling and not a nomeculture name
         possible_harmonics, ongoing_freq = self.harmonic_alloc(
-            self._AC_signals, nmax=self._Nmax
+            self._AC_signals, self.max_freq, nmax=self._Nmax
         )
 
         # convert ongoing freqency to sorted listy
         ongoing_freq = list(ongoing_freq)
         ongoing_freq.sort()
 
-        # add in the DC component
-
-        # check the threshold and tune
-        frequency_current, frequency_space = frequency_transform(
-            Currenttot, self.MECsimstruct.time_tot
-        )
+        # TODO add in the DC component
 
         print("FUCK", frequency_space[0], frequency_space[1])
 

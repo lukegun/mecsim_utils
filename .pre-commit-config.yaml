@@ -16,7 +16,8 @@ repos:
   rev: 7.3.0
   hooks:
   - id: flake8
-    blocking: false # This hook will not block the commit if it fails
+    #always_run: true
+  blocking: false # This hook will not block the commit if it fails
 - repo: local
   hooks:
   - id: pytest
@@ -26,4 +27,3 @@ repos:
     types: [python]
     pass_filenames: false
     #always_run: true
-    blocking: false # This hook will not block the commit if it fail
