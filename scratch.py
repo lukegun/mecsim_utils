@@ -1,21 +1,49 @@
+import numpy as np
+
 from mecsim_utils.processing.auto_ftacv import FTACV_experiment
 
-from dataclasses import dataclass
+from mecsim_utils.transformations.inp.datamodel import INP_DataModel
+import mecsim_utils.processing.utils as mecUtils
+
+# this imports the FTACV stuff
+import mecsim_utils.processing.auto_ftacv as ftcount
+import matplotlib.pyplot as plt
 
 
 # dummy AC case
-@dataclass
-class Dummy_MECSTRUCT:
-    AC: list[dict]  # = [{"f":9}]
+def main():
+
+    test_case = 0
+    exp_inp = (
+        "tests/testingconfig/MasterE_2AC.inp",
+        "tests/testingconfig/MasterE_3AC.inp",
+    )
+
+    Mec_parser = INP_DataModel(exp_inp[test_case], to_struct=True)
+    MECsimstruct = (
+        Mec_parser.transform()
+    )  # I can modify this to shift between DC and FTACV
+
+    """I SHOULD PUT SOMETHING HERE TO MORE CLEANLY WRAP THE mecsim instance and the transformation"""
+    Currenttot = mecUtils.mecsim_current(MECsimstruct)
+
+    frequency_curr, frequency_space = ftcount.frequency_transform(
+        Currenttot, MECsimstruct.time_tot
+    )
+
+    ln_current = np.log(frequency_curr)
+
+    Ftacv_Class = ftcount.FTACV_experiment(MECsimstruct)
+    harmonics = Ftacv_Class(Currenttot)
+
+    plt.plot(frequency_space, ln_current)
+    plt.xlim((0, 100))
+    plt.savefig("test2.png")
+
+    # ftacv_func = FTACV_experiment(MECsimstruct, Nmax=4)
+
+    # harmonics = ftacv_func()
 
 
-MECsimstruct = Dummy_MECSTRUCT(AC=[{"f": 9}, {"f": 117}, {"f": 550}])
-
-
-ftacv_func = FTACV_experiment(MECsimstruct, Nmax=4)
-
-harmonics = ftacv_func()
-
-print(harmonics)
-
-exit(0)
+if __name__ == "__main__":
+    main()

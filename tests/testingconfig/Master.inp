@@ -3,7 +3,7 @@
 0.50		! E_start (V)
 -0.50		! E_rev (V)
 1		! number of cycles
-.01e0		! scan speed (V/s)
+.1e0		! scan speed (V/s)
 17		! 2^N points in time across n cycles (int)
 0		! correct vscan and freq for DigiPot/FFT (1 = yes, 0 for no)
 1		! output type: 0=E,i,t; 1=DigiPot compatible

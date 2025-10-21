@@ -9,6 +9,7 @@ import numpy as np
 import mecsim_utils.utils.utils as Cutils
 from scipy.fft import ifft, fft, fftfreq
 from typing import Optional
+from copy import deepcopy
 
 from dataclasses import dataclass
 
@@ -16,7 +17,8 @@ from dataclasses import dataclass
 import matplotlib.pyplot as plt
 
 """
-    I think I need to sit down and figure out the best way to organise the flow of these systems at some point
+    I think I need to sit down and figure out the best way
+    to organise the flow of these systems at some point
 """
 
 
@@ -26,78 +28,52 @@ def max_filter1d_valid(a, W):
     return scipy.ndimage.maximum_filter1d(a.real, size=W)[hW:-hW]
 
 
-# these are all required such that frequency and scanrate couple and analytical is to difficult. multiple DNNs
-# Will be reuired for higher faster DC regions
-# TODO MAKE THESE FUNCTIONS A BUNCH SMARTER
-def bandwidthallocator(
-    frequency_current, frequency_space, MECsimstruct, label, maxharm=12
-):
-
-    # get the ac signals
-    AC_signals = [x["f"] for x in MECsimstruct.AC]
-    # constant values
-    constant = False
-    if constant:
-        pass
-    # automatic detection
-    else:
-        print(AC_signals)
-        # this will need to be a standa alone function
-        ln_current = np.log(frequency_current)
-
-        # Smooth the max of the background and fit
-        n = int(frequency_space.shape[0] / 2)
-        fit = max_filter1d_valid(ln_current[:n], 60)
-
-        # account for windowing function
-        n2 = fit.shape[0]
-        diff = int((n - n2) / 2)
-
-        # could add an additional process here to remove the known harmonic info
-        p = np.polyfit(frequency_space[diff : n - diff], fit, 7)
-        func = np.poly1d(p)
-        fit = func(frequency_space[:n])
-
-        plt.figure()
-        plt.plot(frequency_space[:n], ln_current[:n])
-        plt.plot(frequency_space[:n], fit)
-        plt.savefig(f"{label}.png")
-
-        # need to figure out rough possible
-
-        # count AC signals (make multiAC possible) secondarary
-        threshold = 2.30
-
-        #  generate a bandwidth
-
-    return
+# TODO remove if unused
+def moving_average(x, w):
+    return np.convolve(x, np.ones(w), "valid") / w
 
 
 def AC_threshold_check(
-    frequency_current, frequency_space, harmonics, ongoing_freq, threshold=2.30, nmax=12
+    frequency_current, frequency_space, harmonics, ongoing_freq, threshold=1.15, nmax=12
 ):
 
     # get the frequency increment
     df = frequency_space[1]
+    n = int(frequency_space.shape[0] / 2)
 
     # this will need to be a standa alone function
     ln_current = np.log(np.abs(frequency_current))
 
-    # Smooth the max of the background and fit
-    n = int(frequency_space.shape[0] / 2)
-    fit = max_filter1d_valid(ln_current[:n], 60)
+    # use the ongoing_freq to attempt to mute the harmonics signal for background calculations
+    ln_background = deepcopy(ln_current[:n])
+    for harms in ongoing_freq:
+        int_1 = int((harms - 1.0) / df)
+        int_2 = int((harms + 1.0) / df)
+        avg = (
+            np.average(ln_background[int_1 - 100 : int_1])
+            + np.average(ln_background[int_2 : int_2 + 100])
+        ) / 2
+        ln_background[int_1:int_2] = avg
 
-    # account for windowing function
+    # Smooth the max of the background and fit
+    fit = max_filter1d_valid(ln_background, 60)
     n2 = fit.shape[0]
     diff = int((n - n2) / 2)
 
     # could add an additional process here to remove the known harmonic info
-    p = np.polyfit(frequency_space[diff : n - diff], fit, 7)
+    p = np.polyfit(frequency_space[int(diff) : int(n - diff)], fit, 7)
     func = np.poly1d(p)
     fit = func(frequency_space[:n])
 
     # compare ln_current to the fit over the harmonics
     lndiff = ln_current[:n] - fit
+
+    print("FUCKER")
+    plt.plot(frequency_space, ln_current)
+    plt.plot(frequency_space[:n], fit)
+    plt.plot(frequency_space[:n], lndiff)
+    plt.xlim((0, 1000))
+    plt.savefig("test.png")
 
     harmonics = calibrate_harms(harmonics, ongoing_freq, lndiff, df, threshold)
 
@@ -483,7 +459,7 @@ class FTACV_experiment:
             frequency_space,
             possible_harmonics,
             ongoing_freq,
-            threshold=2.3,
+            threshold=1.15,
             nmax=self._Nmax,
         )
 

@@ -24,37 +24,6 @@ def test_frequency_transform(current_factory):
 
     return
 
-
-# test bandwidth allicator
-def test_bandwidth_ally(request, current_factory):
-    Currenttot, MECsimstruct = current_factory
-
-    label = request.node.callspec.id
-
-    # need to figure out a way to speed this up a little
-    frequency_curr, frequency_space = ftcount.frequency_transform(
-        Currenttot, MECsimstruct.time_tot
-    )
-
-    # get autobandwidth
-    bandwidth = ftcount.bandwidthallocator(
-        frequency_curr, frequency_space, MECsimstruct, label
-    )
-
-    return
-
-
-# test the nsimdeci
-def test_Sim_deci():
-    np = len(Currenttot)
-    deltatime = 14 / np
-    nsimdeci = ftcount.Simerharmtunc(
-        len(Currenttot), deltatime, bandwidth, MECsimstruct.AC[0]["f"], HarmMax=12
-    )
-
-    return
-
-
 #
 def test_auto_harmcount(current_factory):
     Currenttot, MECsimstruct = current_factory
