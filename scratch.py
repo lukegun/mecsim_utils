@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 # dummy AC case
 def main():
 
-    test_case = 0
+    test_case = 1
     exp_inp = (
         "tests/testingconfig/MasterE_2AC.inp",
         "tests/testingconfig/MasterE_3AC.inp",
@@ -33,16 +33,11 @@ def main():
 
     ln_current = np.log(frequency_curr)
 
+    # TODO RENAME
     Ftacv_Class = ftcount.FTACV_experiment(MECsimstruct)
     harmonics = Ftacv_Class(Currenttot)
 
-    plt.plot(frequency_space, ln_current)
-    plt.xlim((0, 100))
-    plt.savefig("test2.png")
-
-    # ftacv_func = FTACV_experiment(MECsimstruct, Nmax=4)
-
-    # harmonics = ftacv_func()
+    # TO DO SET UP A FUNCTION TO DO WINDOWING AND HARMONIC EXTRACTION
 
 
 if __name__ == "__main__":

@@ -1,9 +1,16 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Feb  7 23:12:19 2021
+
+@author: luke
+"""
+
 import numpy as np
 import scipy as sci
-from scipy.fftpack import ifft, fftfreq
-
-
-
+from scipy.signal import (
+    hilbert as anal_hil_tran,
+)  # NEED signal to make a smooth envolope
+from scipy.fftpack import irfft, rfftfreq
 
 
 def square_window_fund(ftt_freq, band):
@@ -26,6 +33,17 @@ def square_window(ftt_freq, mu, band):
     x[nlow:nhigh] = 1
 
     return x
+
+
+def unit_guassian(x, mu, std):
+    return np.exp(-0.5 * ((x[:] - mu) / std) ** 2)
+
+
+def find_nearest(array1, value):
+    array1 = np.asarray(array1)
+    idx = (np.abs(array1 - value)).argmin()
+    return int(idx)
+
 
 # below works but isnt relavant at moment
 def blackman_win(x, band, mu):
@@ -64,7 +82,7 @@ def analitical_RGguassconv(x, band, mean, std):
     )
 
     # normalization for ease of computation
-    z = z / np.max(z)
+    z = z / max(z)
 
     return z
 
@@ -83,7 +101,7 @@ def analitical_RGguassconv_fund(x, band, std):
     )
 
     # normalization for ease of computation
-    z = z / np.max(z)
+    z = z / max(z)
 
     return z
 
@@ -108,6 +126,63 @@ def RGguassconv_filters(Ndata, bandwidth, dt, AC_freq, std):
         filter_hold.append(Convguass)
 
     return filter_hold
+
+
+def windowed_harm_gen(fft_res, bandwidth, Nac, filters):
+    # conversin for AC format
+    bandwidth = np.array(bandwidth)
+    x = []
+    x.append(bandwidth[0][0])
+    for ii in range(len(bandwidth[0]) - 1):
+        x.append(0)
+
+    y = []
+    y.append(x)
+    for i in range(Nac):
+        x = []
+        for ii in range(len(bandwidth[i + 1])):
+            x.append(bandwidth[i + 1][ii])
+        y.append(x)
+    bandwidth = np.array(y)
+
+    hil_store = Harmonic_gen(fft_res, filters, Nac, bandwidth)  # extract envolope data
+
+    return np.array(hil_store)
+
+
+# generates harmonics envolopes from MECSim current output
+def Harmonic_gen(
+    fft_res, filters, Nac, bandwidth
+):  # cuts the harmonic fourier space data out {NEEDS TO EXCLUDE FUNDEMENTAL}
+    nharm = bandwidth.shape[1] + 1  # counts the number of harmonics
+
+    Np = len(fft_res)  # gets the number of datapoints
+    # harmstore = np.zeros(nharm*spaces[4] ,int(Mwin*(2/g)))
+    hil_store = []
+    N_ifft = np.zeros((nharm * Nac + 1))
+
+    # hil_store[0,:] = irfft(y)  # generates fundimental harmonics from cut window
+
+    x = fft_res * filters[0]  # This need to be truncated in the future
+
+    harmonic = irfft(x)  # generates harmonics
+
+    hil_store.append(harmonic)
+
+    i = 1
+    while i != nharm:
+        x = fft_res * filters[i]  # This need to be truncated in the future
+
+        harmonic = irfft(x)  # generates harmonics
+
+        hil_store.append(
+            abs(anal_hil_tran(harmonic))
+        )  # uses HILBERT TRANSFORM to generate the envolope
+
+        # using the abs fixed an issue with the complexes disapearing in the return
+        i += 1
+
+    return hil_store
 
 
 # flaterns the noise of DC and fundimental then replaces it of averge cut for capacitance
@@ -135,10 +210,3 @@ def noiseflattern(hil_store, time, trun):
     hil_store[Ndc:, int_e:] = 0
 
     return hil_store
-
-
-# TODO REMOVE OR MAKE A UTILITY FUNCTION
-def find_nearest(array1, value):
-    array1 = np.asarray(array1)
-    idx = (np.abs(array1 - value)).argmin()
-    return int(idx)

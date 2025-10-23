@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
     to organise the flow of these systems at some point
 """
 
+# TODO move these functions elsewhere
 
 # move this to a utils function or just in the bandwidth processing
 def max_filter1d_valid(a, W):
@@ -68,13 +69,6 @@ def AC_threshold_check(
     # compare ln_current to the fit over the harmonics
     lndiff = ln_current[:n] - fit
 
-    print("FUCKER")
-    plt.plot(frequency_space, ln_current)
-    plt.plot(frequency_space[:n], fit)
-    plt.plot(frequency_space[:n], lndiff)
-    plt.xlim((0, 1000))
-    plt.savefig("test.png")
-
     harmonics = calibrate_harms(harmonics, ongoing_freq, lndiff, df, threshold)
 
     return harmonics
@@ -87,34 +81,46 @@ def calibrate_harms(harmonics, ongoing_freq, lndiff, df, threshold):
     harms = list(harmonics.keys())
     harms.sort()
 
-    # check the primrary harmonics
-    print("shit", harms)
+    # calibrate the Fundimental separately
+    if 0 in harmonics.keys():
+        harmonics[0] = check_fundimental(harmonics[0], ongoing_freq)
+
+    # check the harmonics
     for j in harms:
+
+        # lazy fundimental skip
+        if j == 0:
+            continue
+
         harmlists = list(harmonics[j].keys())
-        print("poop", j)
         for i in harmlists:
             # get band of interest
             exist, temp_harms = check_harm_band(
                 harmonics[j][i], ongoing_freq, lndiff, df, threshold
             )
-
-            print(j, i, "fuck", exist)
-
             if exist:
                 harmonics[j][i] = temp_harms
             else:
                 # TODO drop all other related harmonics  OPTIMISE THIS SOMEHOW
                 del harmonics[j][i]
 
-            # RECURSIVE
-            # check threshold add to drop and continue
-
         # if empty delete
-        print("CUNT", list(harmonics[j].keys()))
         if len(harmonics[j]) == 0:
             del harmonics[j]
 
     return harmonics
+
+def check_fundimental(fundimental_harmonic, ongoing_freq):
+
+    # calculate the bandwidth used for fundimental
+    maxWieght = 0
+    if len(ongoing_freq) != 1:
+        maxWieght = ongoing_freq[1]/2  # what am I going to do if no AC????
+    
+    # TODO add a method that uses LN_current
+    fundimental_harmonic.bandwith = min(maxWieght,25)
+
+    return fundimental_harmonic
 
 
 def check_harm_band(harms, ongoing_freq, lndiff, df, threshold):
@@ -187,6 +193,13 @@ def frequency_transform(Currenttot, tot_time):
     frequency_curr = fft(Currenttot)
 
     return frequency_curr, frequency_space
+
+def calc_fundimental(ongoing_freq=set()):
+
+    temp_harmonics = datastruct_func(0, {}, 0, 0)
+    ongoing_freq.add(0)
+
+    return temp_harmonics, ongoing_freq
 
 
 def calc_primrary(AC_signal, Max_freq, ongoing_freq=set(), nmax=12):
@@ -285,8 +298,14 @@ def calc_tertiary(AC_signals, Max_freq, ongoing_freq=set(), nmax=12):
 
 def single_AC(AC_signals, Max_freq, possible_harmonics={}, ongoing_freq=set(), nmax=12):
 
-    possible_harmonics = {1: {}}
+    possible_harmonics = {0:{},1: {}}
     ongoing_freq = set()
+
+    # calculate the fundiemntal information
+    temp, ongoing_freq = calc_fundimental(ongoing_freq )
+    possible_harmonics[0] = temp
+
+    # calculate the Primrary harmonics
     temp, ongoing_freq = calc_primrary(
         AC_signals[0], Max_freq, ongoing_freq=ongoing_freq, nmax=nmax
     )
@@ -297,15 +316,19 @@ def single_AC(AC_signals, Max_freq, possible_harmonics={}, ongoing_freq=set(), n
 
 def dual_AC(AC_signals, Max_freq, nmax=12):
 
-    possible_harmonics = {1: {}, 2: {}}
+    possible_harmonics = {0: {}, 1: {}, 2: {}}
     ongoing_freq = set()
+
+    # calculate the fundiemntal information
+    temp, ongoing_freq = calc_fundimental(ongoing_freq )
+    possible_harmonics[0] = temp
 
     # identify the primrary harmonics
     for z in range(2):
         temp, ongoing_freq = calc_primrary(
             AC_signals[z], Max_freq, ongoing_freq, nmax=nmax
         )
-        temp = rename_labels2D(temp, z)
+        temp = rename_labels(temp, [z], order=2)
         possible_harmonics[1].update(temp)
 
     # calculate the secondary harmonics
@@ -317,14 +340,20 @@ def dual_AC(AC_signals, Max_freq, nmax=12):
 
 def triplicate_AC(AC_signals, Max_freq, nmax=12):
 
-    possible_harmonics = {1: {}, 2: {}, 3: {}}
+    possible_harmonics = {0: {}, 1: {}, 2: {}, 3: {}}
     ongoing_freq = set()
+
+    # calculate the fundiemntal information
+    temp, ongoing_freq = calc_fundimental(ongoing_freq )
+    possible_harmonics[0] = temp
+
+
     # calculate the primrary harmonics
     for z in range(3):
         temp, ongoing_freq = calc_primrary(
             AC_signals[z], Max_freq, ongoing_freq, nmax=nmax
         )
-        temp = rename_labels3D(temp, z)
+        temp =  rename_labels(temp, [z], order=3)
         possible_harmonics[1].update(temp)
 
     # calculate the secondary harmonics
@@ -333,7 +362,7 @@ def triplicate_AC(AC_signals, Max_freq, nmax=12):
             [AC_signals[z], AC_signals[(z + 1) % 2]], Max_freq, ongoing_freq, nmax=nmax
         )
         labels = (z, (z + 1) % 2)
-        temp = rename_labels3D_2(temp, labels)
+        temp = rename_labels(temp, labels, order=3)
         possible_harmonics[2].update(temp)
 
     # calculate the tertiary frequencies
@@ -342,51 +371,23 @@ def triplicate_AC(AC_signals, Max_freq, nmax=12):
 
     return possible_harmonics, ongoing_freq
 
-
 # this is needed to rename the system
-def rename_labels2D(harms_dic_old, labels):
+def rename_labels(harms_dic_old, labels, order):
 
     harms_dic_new = {}
-    l = [0, 0]
-    for keys, items in harms_dic_old.items():
-        l[labels] = keys
-        new_label = "{}:{}".format(*l)
-        harms_dic_new.update({new_label: items})
-
-    return harms_dic_new
-
-
-# this is needed to rename the system
-def rename_labels3D(harms_dic_old, labels):
-
-    harms_dic_new = {}
-    l = [0, 0, 0]
-    for keys, items in harms_dic_old.items():
-        l[labels] = keys
-        new_label = "{}:{}:{}".format(*l)
-        harms_dic_new.update({new_label: items})
-
-    return harms_dic_new
-
-
-# this is needed to rename the system
-def rename_labels3D_2(harms_dic_old, labels):
-
-    print(labels, """fucker""")
-
-    harms_dic_new = {}
-    l = [0, 0, 0]
+    l = ["0" for x in range(order)]
     for keys, items in harms_dic_old.items():
         s = keys.split(":")
-        l[labels[0]] = s[0]
-        l[labels[1]] = s[1]
-        new_label = "{}:{}:{}".format(*l)
+        for i, v in enumerate(labels):
+            l[v] = s[i]
+        new_label = ":".join(l)
         harms_dic_new.update({new_label: items})
 
     return harms_dic_new
 
 
 # clean function for defining the FTACV_harmonic goes args to kwargs
+# TODO REMOVE
 def datastruct_func(freq, combination, allocation, harmonic_num):
     datastruct = FTACV_harmonic(
         freq=freq,
@@ -413,7 +414,7 @@ class FTACV_experiment:
         self._Nmax = Nmax
 
         assert self._Nac != 0, "ERROR: no AC signal found for experiment"
-        print("hello", self._AC_signals, self._Nac)
+
         # confirm that the AC allocation function is right for number of AC_signals
         if self._Nac == 1:
             self.harmonic_alloc = single_AC
@@ -430,7 +431,6 @@ class FTACV_experiment:
 
     # this identifies all the possible harmonics and
     def __call__(self, Currenttot):
-        print(self._Nac)
 
         # check the threshold and tune
         frequency_current, frequency_space = frequency_transform(
@@ -449,12 +449,8 @@ class FTACV_experiment:
         ongoing_freq = list(ongoing_freq)
         ongoing_freq.sort()
 
-        # TODO add in the DC component
-
-        print("FUCK", frequency_space[0], frequency_space[1])
-
         # adjust bandwidths
-        AC_threshold_check(
+        harmonics = AC_threshold_check(
             frequency_current,
             frequency_space,
             possible_harmonics,
@@ -463,11 +459,7 @@ class FTACV_experiment:
             nmax=self._Nmax,
         )
 
-        # remove overlapping bandwidths
-
-        # generate the harmonics
-
-        return possible_harmonics
+        return harmonics
 
 
 # this is a specific harmonic information
@@ -497,3 +489,7 @@ class FTACV_harmonic:
 
         # put something here so people know whats in the dataclass
         return f"""Harmonic information for {s} at {self.freq} Hz, as the {self.harmonic_num} harmonic of {self.allocation}."""
+
+
+
+
