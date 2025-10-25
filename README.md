@@ -12,7 +12,7 @@ This is a repo to make module that has been made for a range of mecsim FTAC volt
 - Finish up the unit tests for this component
 
 # todo before break
-GET MECWRITTERV3 working and set up 
+GET MECWRITTERV3 working and set up
 - get clusteringV2 set up
 - get DNN clustering set up
 - prototype RL learning

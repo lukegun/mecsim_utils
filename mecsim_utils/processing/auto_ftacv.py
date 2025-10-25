@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 
 # TODO move these functions elsewhere
 
+
 # move this to a utils function or just in the bandwidth processing
 def max_filter1d_valid(a, W):
     hW = (W - 1) // 2  # Half window size
@@ -110,15 +111,16 @@ def calibrate_harms(harmonics, ongoing_freq, lndiff, df, threshold):
 
     return harmonics
 
+
 def check_fundimental(fundimental_harmonic, ongoing_freq):
 
     # calculate the bandwidth used for fundimental
     maxWieght = 0
     if len(ongoing_freq) != 1:
-        maxWieght = ongoing_freq[1]/2  # what am I going to do if no AC????
-    
+        maxWieght = ongoing_freq[1] / 2  # what am I going to do if no AC????
+
     # TODO add a method that uses LN_current
-    fundimental_harmonic.bandwith = min(maxWieght,25)
+    fundimental_harmonic.bandwith = min(maxWieght, 25)
 
     return fundimental_harmonic
 
@@ -193,6 +195,7 @@ def frequency_transform(Currenttot, tot_time):
     frequency_curr = fft(Currenttot)
 
     return frequency_curr, frequency_space
+
 
 def calc_fundimental(ongoing_freq=set()):
 
@@ -298,11 +301,11 @@ def calc_tertiary(AC_signals, Max_freq, ongoing_freq=set(), nmax=12):
 
 def single_AC(AC_signals, Max_freq, possible_harmonics={}, ongoing_freq=set(), nmax=12):
 
-    possible_harmonics = {0:{},1: {}}
+    possible_harmonics = {0: {}, 1: {}}
     ongoing_freq = set()
 
     # calculate the fundiemntal information
-    temp, ongoing_freq = calc_fundimental(ongoing_freq )
+    temp, ongoing_freq = calc_fundimental(ongoing_freq)
     possible_harmonics[0] = temp
 
     # calculate the Primrary harmonics
@@ -320,7 +323,7 @@ def dual_AC(AC_signals, Max_freq, nmax=12):
     ongoing_freq = set()
 
     # calculate the fundiemntal information
-    temp, ongoing_freq = calc_fundimental(ongoing_freq )
+    temp, ongoing_freq = calc_fundimental(ongoing_freq)
     possible_harmonics[0] = temp
 
     # identify the primrary harmonics
@@ -344,16 +347,15 @@ def triplicate_AC(AC_signals, Max_freq, nmax=12):
     ongoing_freq = set()
 
     # calculate the fundiemntal information
-    temp, ongoing_freq = calc_fundimental(ongoing_freq )
+    temp, ongoing_freq = calc_fundimental(ongoing_freq)
     possible_harmonics[0] = temp
-
 
     # calculate the primrary harmonics
     for z in range(3):
         temp, ongoing_freq = calc_primrary(
             AC_signals[z], Max_freq, ongoing_freq, nmax=nmax
         )
-        temp =  rename_labels(temp, [z], order=3)
+        temp = rename_labels(temp, [z], order=3)
         possible_harmonics[1].update(temp)
 
     # calculate the secondary harmonics
@@ -370,6 +372,7 @@ def triplicate_AC(AC_signals, Max_freq, nmax=12):
     possible_harmonics[3].update(temp)
 
     return possible_harmonics, ongoing_freq
+
 
 # this is needed to rename the system
 def rename_labels(harms_dic_old, labels, order):
@@ -469,9 +472,11 @@ class FTACV_harmonic:
     freq: float
     combination: dict  # list of AC harmonic combination {Hz: scalar multi}
     allocation: int  # 0 for dc, 1 for primrary, 2 for secondary so on
-    # harmonic: Optional[np.array] # this stores the harmonic but that information comes later
     harmonic_num: int  # abs sum of the combination
-    bandwith: float = 4  # defaults to 4 Hz
+    # this stores the harmonic but that information comes later
+    harmonic: Optional[np.array] = None 
+    bandwith: float = 4.  # defaults to 4 Hz
+    std: float = 0.1 # this is a feature used for guassian func
 
     def __repr__(self):
 
@@ -488,8 +493,5 @@ class FTACV_harmonic:
                 s += f",{self.combination[keys]}"
 
         # put something here so people know whats in the dataclass
-        return f"""Harmonic information for {s} at {self.freq} Hz, as the {self.harmonic_num} harmonic of {self.allocation}."""
-
-
-
-
+        return f"""Harmonic information for {s} at {self.freq} Hz,
+                   as the {self.harmonic_num} harmonic of {self.allocation}."""

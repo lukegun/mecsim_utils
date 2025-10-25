@@ -3,7 +3,8 @@ import scipy as sci
 from scipy.fftpack import ifft, fftfreq
 
 
-
+# this imports the FTACV stuff
+import mecsim_utils.processing.auto_ftacv as ftcount
 
 
 def square_window_fund(ftt_freq, band):
@@ -17,7 +18,7 @@ def square_window_fund(ftt_freq, band):
     return x
 
 
-def square_window(ftt_freq, mu, band):
+def square_window(ftt_freq, band, mu):
     nlow = find_nearest(ftt_freq, mu - band / 2)
     nhigh = find_nearest(ftt_freq, mu + band / 2)
 
@@ -26,6 +27,7 @@ def square_window(ftt_freq, mu, band):
     x[nlow:nhigh] = 1
 
     return x
+
 
 # below works but isnt relavant at moment
 def blackman_win(x, band, mu):
@@ -50,16 +52,17 @@ def blackman_win(x, band, mu):
 
 
 # std = band*std0
-def analitical_RGguassconv(x, band, mean, std):
+def rg_guassconv(x, band, mean, std):
     s = np.sqrt(2) / 2  # np.sqrt(2)/2
     c = np.sqrt(np.pi / 2)  # np.sqrt(np.pi/2)
+    inv_std = s/std
 
     z = (
         c
         * std
         * (
-            sci.special.erf((-x[:] + mean + band / 2) * s / std)
-            - sci.special.erf((-x[:] + mean - band / 2) * s / std)
+            sci.special.erf((-x[:] + mean + band * 0.5) *  inv_std)
+            - sci.special.erf((-x[:] + mean - band * 0.5) * inv_std)
         )
     )
 
@@ -69,7 +72,7 @@ def analitical_RGguassconv(x, band, mean, std):
     return z
 
 
-def analitical_RGguassconv_fund(x, band, std):
+def rg_guassconv_fund(x, band, std):
     s = np.sqrt(2) / 2  # np.sqrt(2)/2
     c = np.sqrt(np.pi / 2)  # np.sqrt(np.pi/2)
 
@@ -89,17 +92,17 @@ def analitical_RGguassconv_fund(x, band, std):
 
 
 # this sets up all the filters for the
-def RGguassconv_filters(Ndata, bandwidth, dt, AC_freq, std):
+def rg_guassconv_filters(Ndata, bandwidth, dt, AC_freq, std):
     filter_hold = []
     fft_freq = rfftfreq(Ndata, d=dt)
-    Convguass = analitical_RGguassconv_fund(
+    Convguass = rg_guassconv_fund(
         fft_freq, bandwidth[0][0], std * bandwidth[0][0]
     )
     filter_hold.append(Convguass)
 
     for NNNN in range(1, len(bandwidth[1]) + 1):
         # analytical solution to guass rec convultion
-        Convguass = analitical_RGguassconv(
+        Convguass = rg_guassconv(
             fft_freq,
             bandwidth[1][NNNN - 1],
             NNNN * AC_freq[0],
@@ -135,6 +138,95 @@ def noiseflattern(hil_store, time, trun):
     hil_store[Ndc:, int_e:] = 0
 
     return hil_store
+
+# wrappers to unpack the harmonic info and pass to the convolution case
+def rg_guassconv_wrapper(frequency_space, harmonic):
+    conv = rg_guassconv(frequency_space, harmonic.bandwith,
+                    harmonic.freq, harmonic.std * harmonic.bandwith)  
+    return conv
+
+
+# wrappers to unpack the harmonic info and pass to the convolution case
+def square_window_wrapper(frequency_space, harmonic):
+    conv = square_window(frequency_space, harmonic.bandwith,
+                        harmonic.freq)  
+    return conv
+
+import matplotlib.pyplot as plt
+
+def harmonics_generate(Currenttot,MECsimstruct,harmonics, window_func="guassian", envolope=True):
+
+    frequency_curr, frequency_space = ftcount.frequency_transform(
+        Currenttot, MECsimstruct.time_tot
+    )
+
+    # POSSIBLY DECIMATE THE HARMONICS FOR OPTIMISATION
+
+    # THIS CAN BE REMOVED AS we should be able to abstract it away with the 
+    # below function
+    parent_harms = list(harmonics.keys())
+    if 0 in parent_harms:
+        parent_harms.remove(0)
+
+    # set something up split to optional function for windowing and output harmonic vs harmonic current
+    match window_func:
+        case "guassian":
+            windowing = rg_guassconv_wrapper
+        case "square":
+            windowing = square_window_wrapper
+        case _:
+            raise ValueError(f'ERROR: unreconised window func "{window_func}", please use guassian or square.')
+
+    n = int((frequency_curr.shape[0])/2)
+    N = frequency_curr.shape[0]
+    # TODO fix this
+    # loop the harmonics
+    for p_h in parent_harms:
+        # loop over the harmonics 
+        for keys, harms in harmonics[p_h].items():
+
+            # generate the harmonics
+            # TODO make this optional
+            Convguass = windowing(frequency_space, harms)
+
+            # this deals with the imaginary component
+            f = Convguass[:n]
+            Convguass[n:] = f[::-1]
+
+            # TODO PUT THE total current vs envolope harmonic
+            if envolope:
+                ## FLIP IT OR SET IMAGINARY TO O
+                #frequency_curr[n:] = 0
+                print("FUCK")
+                h = np.zeros(N, dtype= frequency_curr.dtype)
+                if N % 2 == 0:
+                    h[0] = h[N // 2] = 1
+                    h[1:N // 2] = 2
+                else:
+                    h[0] = 1
+                    h[1:(N + 1) // 2] = 2
+
+
+                frequency_curr = frequency_curr*h
+                #frequency_curr[n:] = 0
+
+
+
+            # convert to harmonic TODO FIGURE OUT WHERE TO PUT THIS
+            harmonic = ifft(Convguass * frequency_curr)
+
+            # put the harmonic back in the structure
+            # TODO truncate this somewhere ????
+            # FIX THERES A BUG HERE WHERE SIGNALS DO NOT MATCH
+            if envolope:
+                harmonics[p_h][keys].harmonic = np.abs(harmonic)
+            else:
+                harmonics[p_h][keys].harmonic = harmonic.real #np.absolute(harmonic)
+    # flattern noise ???
+
+
+
+    return harmonics
 
 
 # TODO REMOVE OR MAKE A UTILITY FUNCTION

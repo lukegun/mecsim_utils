@@ -7,14 +7,16 @@ import mecsim_utils.processing.utils as mecUtils
 
 # this imports the FTACV stuff
 import mecsim_utils.processing.auto_ftacv as ftcount
+import mecsim_utils.processing.window_func as ft_wind
+
 import matplotlib.pyplot as plt
 
 
 # dummy AC case
 def main():
 
-    test_case = 1
-    exp_inp = (
+    test_case = 0
+    exp_inp = ("tests/testingconfig/Master.inp",
         "tests/testingconfig/MasterE_2AC.inp",
         "tests/testingconfig/MasterE_3AC.inp",
     )
@@ -31,13 +33,31 @@ def main():
         Currenttot, MECsimstruct.time_tot
     )
 
-    ln_current = np.log(frequency_curr)
+
+    plt.figure()
+    plt.plot(frequency_space)
+    plt.savefig("frequencyspace.png")
+    plt.close()
 
     # TODO RENAME
     Ftacv_Class = ftcount.FTACV_experiment(MECsimstruct)
     harmonics = Ftacv_Class(Currenttot)
 
     # TO DO SET UP A FUNCTION TO DO WINDOWING AND HARMONIC EXTRACTION
+    # TODO add a function to write this function
+    harmonics = ft_wind.harmonics_generate(Currenttot,MECsimstruct,harmonics,
+                                            window_func="guassian", envolope=False)
+    
+    t = np.linspace(0,MECsimstruct.time_tot,num=Currenttot.shape[0])
+
+
+    for i,harms in harmonics[1].items():
+        print(type(harms.harmonic[5]))
+        plt.figure()
+        plt.plot(t,harms.harmonic.real)
+        plt.plot(t,harms.harmonic.imag)
+        plt.savefig(f"{i}_harm.png")
+        plt.close()
 
 
 if __name__ == "__main__":
