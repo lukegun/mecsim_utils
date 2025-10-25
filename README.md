@@ -2,10 +2,20 @@
 This is a repo to make module that has been made for a range of mecsim FTAC voltammetry AI  systems
 
 
+# TODO TOMMOROW
+- add flatterning function 
+- refactor harmonics (Map out the process)
+- validate accuracy
+- add unit tests
+- optimise the flow
+
+# draft up the SQL stuff (set up databases and rough structure)
+
+
 
 # TODO
 - Confirm the accuracy of the stuff (50:50)
-- add something into the windowing to allow the function to allocate based on known values (SIMPLE)
+
 - ADD a check if AC freq amplitude != 0 in INP to mecstracture (VALIDATOR ????)
 - MOVE HARM CALC INTO A SINGLE CLASS
 - do the windowing

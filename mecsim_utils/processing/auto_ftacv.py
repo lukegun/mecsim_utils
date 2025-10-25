@@ -83,8 +83,12 @@ def calibrate_harms(harmonics, ongoing_freq, lndiff, df, threshold):
     harms.sort()
 
     # calibrate the Fundimental separately
-    if 0 in harmonics.keys():
-        harmonics[0] = check_fundimental(harmonics[0], ongoing_freq)
+    # TODO CHECK IF WE CAN MAKE THIS REDUNDANT
+    harm_parent = list(harmonics.keys())
+
+    if 0 in harm_parent:
+        harmonics[0]["0"] = check_fundimental(harmonics[0]["0"], ongoing_freq)
+        harm_parent.remove(0)
 
     # check the harmonics
     for j in harms:
@@ -199,7 +203,7 @@ def frequency_transform(Currenttot, tot_time):
 
 def calc_fundimental(ongoing_freq=set()):
 
-    temp_harmonics = datastruct_func(0, {}, 0, 0)
+    temp_harmonics = {"0":datastruct_func(0, {0:"0"}, 0, 0)}
     ongoing_freq.add(0)
 
     return temp_harmonics, ongoing_freq
@@ -306,7 +310,8 @@ def single_AC(AC_signals, Max_freq, possible_harmonics={}, ongoing_freq=set(), n
 
     # calculate the fundiemntal information
     temp, ongoing_freq = calc_fundimental(ongoing_freq)
-    possible_harmonics[0] = temp
+    # this is done so structure is consistent over all types
+    possible_harmonics[0].update(temp)
 
     # calculate the Primrary harmonics
     temp, ongoing_freq = calc_primrary(
@@ -324,7 +329,7 @@ def dual_AC(AC_signals, Max_freq, nmax=12):
 
     # calculate the fundiemntal information
     temp, ongoing_freq = calc_fundimental(ongoing_freq)
-    possible_harmonics[0] = temp
+    possible_harmonics[0].update(temp)
 
     # identify the primrary harmonics
     for z in range(2):
@@ -348,7 +353,7 @@ def triplicate_AC(AC_signals, Max_freq, nmax=12):
 
     # calculate the fundiemntal information
     temp, ongoing_freq = calc_fundimental(ongoing_freq)
-    possible_harmonics[0] = temp
+    possible_harmonics[0].update(temp)
 
     # calculate the primrary harmonics
     for z in range(3):
@@ -474,9 +479,9 @@ class FTACV_harmonic:
     allocation: int  # 0 for dc, 1 for primrary, 2 for secondary so on
     harmonic_num: int  # abs sum of the combination
     # this stores the harmonic but that information comes later
-    harmonic: Optional[np.array] = None 
-    bandwith: float = 4.  # defaults to 4 Hz
-    std: float = 0.1 # this is a feature used for guassian func
+    harmonic: Optional[np.array] = None
+    bandwith: float = 4.0  # defaults to 4 Hz
+    std: float = 0.1  # this is a feature used for guassian func
 
     def __repr__(self):
 
