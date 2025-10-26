@@ -15,4 +15,4 @@ def format_e(n):
 def find_nearest(array, value):
     """Find nearest value is an array"""
     idx = (np.abs(array - value)).argmin()
-    return idx
+    return int(idx)

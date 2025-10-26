@@ -3,14 +3,18 @@ This is a repo to make module that has been made for a range of mecsim FTAC volt
 
 
 # TODO TOMMOROW
-- add flatterning function 
 - refactor harmonics (Map out the process)
+- why is the 3AC not passing AC validation 
+    (ISSUE is so many combination it overloads the possible harmonics this needs a fix)
+- see if theres a way to remove the currently two FFT's that are done
 - validate accuracy
 - add unit tests
 - optimise the flow
 
 # draft up the SQL stuff (set up databases and rough structure)
-
+SQL
+auto capacitance fitting
+SOME smart way to lo9ad in files
 
 
 # TODO

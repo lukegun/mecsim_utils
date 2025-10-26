@@ -48,6 +48,7 @@ def AC_threshold_check(
 
     # use the ongoing_freq to attempt to mute the harmonics signal for background calculations
     ln_background = deepcopy(ln_current[:n])
+    print("FUCKER", ongoing_freq)
     for harms in ongoing_freq:
         int_1 = int((harms - 1.0) / df)
         int_2 = int((harms + 1.0) / df)
@@ -203,7 +204,7 @@ def frequency_transform(Currenttot, tot_time):
 
 def calc_fundimental(ongoing_freq=set()):
 
-    temp_harmonics = {"0":datastruct_func(0, {0:"0"}, 0, 0)}
+    temp_harmonics = {"0": datastruct_func(0, {0: "0"}, 0, 0)}
     ongoing_freq.add(0)
 
     return temp_harmonics, ongoing_freq
@@ -286,6 +287,7 @@ def calc_tertiary(AC_signals, Max_freq, ongoing_freq=set(), nmax=12):
                     if (
                         freq > 0 and int(freq) not in ongoing_freq and freq < Max_freq
                     ):  # to avoid duplicates
+                        print("KKKKKKKKK", int(freq))
                         ongoing_freq.add(int(freq))
                         s = f"{z1*i}:{z2*j}:{z3*k}"
                         datastruct = datastruct_func(
@@ -411,7 +413,9 @@ def datastruct_func(freq, combination, allocation, harmonic_num):
 # TODO MAKE THIS MORE LIKE A CLASS WHERE SELF CONTAINED
 class FTACV_experiment:
 
-    def __init__(self, MECsimstruct, Nmax=12):
+    def __init__(self, MECsimstruct, Nmax=12, threshold=1.15):
+
+        self.threshold = threshold
 
         # get the ac signals
         self.MECsimstruct = MECsimstruct
@@ -463,7 +467,8 @@ class FTACV_experiment:
             frequency_space,
             possible_harmonics,
             ongoing_freq,
-            threshold=1.15,
+            # TODO MAke this a handled varibles
+            threshold=self.threshold,
             nmax=self._Nmax,
         )
 

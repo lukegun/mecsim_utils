@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 # dummy AC case
 def main():
 
-    test_case = 0
+    test_case = 2
     exp_inp = (
         "tests/testingconfig/Master.inp",
         "tests/testingconfig/MasterE_2AC.inp",
@@ -42,30 +42,31 @@ def main():
     plt.close()
 
     # TODO RENAME
-    Ftacv_Class = ftcount.FTACV_experiment(MECsimstruct)
+    Ftacv_Class = ftcount.FTACV_experiment(MECsimstruct, threshold=1.15)
     harmonics = Ftacv_Class(Currenttot)
 
     # TO DO SET UP A FUNCTION TO DO WINDOWING AND HARMONIC EXTRACTION
     # TODO add a function to write this function
     harmonics_BU = deepcopy(harmonics)
-    func = ft_wind.harmonics_generate(
-         window_func="guassian", envelope=False
-    )
+    func = ft_wind.harmonics_generate(window_func="guassian", envelope=False)
     harmonics = func(Currenttot, MECsimstruct, harmonics)
     t1 = time.time()
     func = ft_wind.harmonics_generate(
-         window_func="guassian", envelope=True
+        window_func="guassian", envelope=True, flatten_percent=0.01
     )
     harmonics2 = func(Currenttot, MECsimstruct, harmonics_BU)
-    t = np.linspace(0, MECsimstruct.time_tot, num=int(harmonics[1]["1"].harmonic.shape[0]))
 
-    for i, (harms1, harms2) in enumerate(zip(harmonics[1].values(),harmonics2[1].values())):
-        print(i, max(harms2.harmonic))
-        plt.figure()
-        plt.plot(t, harms1.harmonic)
-        plt.plot(t, harms2.harmonic)
-        plt.savefig(f"{i + 1}_harm.png")
-        plt.close()
+    t = np.linspace(
+        0, MECsimstruct.time_tot, num=int(harmonics[0]["0"].harmonic.shape[0])
+    )
+
+    for keys_p, harms2 in harmonics2.items():
+        for keys_c, harms in harms2.items():
+            print(f"{keys_p}_{keys_c}", max(harms.harmonic))
+            plt.figure()
+            plt.plot(t, harms.harmonic)
+            plt.savefig(f"pics/{keys_p}_{keys_c}_harm.png")
+            plt.close()
 
 
 if __name__ == "__main__":
