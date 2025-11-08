@@ -48,7 +48,7 @@ def AC_threshold_check(
 
     # use the ongoing_freq to attempt to mute the harmonics signal for background calculations
     ln_background = deepcopy(ln_current[:n])
-    print("FUCKER", ongoing_freq)
+
     for harms in ongoing_freq:
         int_1 = int((harms - 1.0) / df)
         int_2 = int((harms + 1.0) / df)
@@ -129,6 +129,28 @@ def check_fundimental(fundimental_harmonic, ongoing_freq):
 
     return fundimental_harmonic
 
+def calc_min_band(peak_current, lndiff, AC_freq, df):
+
+    adjustedband = False
+    test_freq = 0.25
+
+    # adjust the bandwidth
+    n = 64
+    for i in range(1, n):
+        i1 = int((AC_freq - i * test_freq) / df)
+        i2 = int((AC_freq + i * test_freq) / df)
+        # detect if the bandwidth is appropriate minimum
+        if np.average(lndiff[i1:i2]) < peak_current * 0.2:
+            minband = 2 * i * test_freq
+            adjustedband = True
+            break
+
+    # TODO IT'S BREAKING HERE
+    if not adjustedband:
+        minband = 2 * (n - 1) * test_freq
+
+    return minband
+
 
 def check_harm_band(harms, ongoing_freq, lndiff, df, threshold):
 
@@ -140,26 +162,12 @@ def check_harm_band(harms, ongoing_freq, lndiff, df, threshold):
     #
     lndiff = np.where(lndiff < 0, 0, lndiff)
 
-    # check if the freq is above a threshold
-    adjustedband = False
-    test_freq = 0.25
     # get the max value in the diff
     peak_current = np.max(lndiff[int_harmband_1:int_harmband_2])
     if peak_current > threshold:
         exist = True
         # adjust the bandwidth
-        n = 24
-        for i in range(1, n):
-            i1 = int((AC_freq - i * test_freq) / df)
-            i2 = int((AC_freq + i * test_freq) / df)
-            # detect if the bandwidth is appropriate minimum
-            if np.average(lndiff[i1:i2]) < peak_current * 0.2:
-                minband = 2 * i * test_freq
-                adjustedband = True
-                break
-
-        if not adjustedband:
-            minband = 2 * (n - 1) * test_freq
+        minband = calc_min_band(peak_current, lndiff, AC_freq, df)
 
         # calculate the maximum bandwidth
         # TODO make rounding safe
@@ -180,10 +188,20 @@ def check_harm_band(harms, ongoing_freq, lndiff, df, threshold):
             min(bandidthrange) - minband
         )  # this takes the average between largest and smallest
 
+
         # some arbitrary rule to attempt to estimate the
         # Edge cases (massive AC harmonics)
         # to harmonic overlaps (KILL harmonics)
-        harms.bandwith = min(max_range, 40, 2 * 6 * minband)
+        hband = min(max_range, 40, 2 * 6 * minband)
+
+        # lazy hack for the case where bandwidths can't be identified
+        # This likily occurs during the 
+        if hband <= 0.5:
+            exist = False
+
+        # TODO put a check in here to if bandwidth doesn't exist as things are in it
+        harms.bandwith = hband
+       
 
     else:
         exist = False
@@ -287,7 +305,6 @@ def calc_tertiary(AC_signals, Max_freq, ongoing_freq=set(), nmax=12):
                     if (
                         freq > 0 and int(freq) not in ongoing_freq and freq < Max_freq
                     ):  # to avoid duplicates
-                        print("KKKKKKKKK", int(freq))
                         ongoing_freq.add(int(freq))
                         s = f"{z1*i}:{z2*j}:{z3*k}"
                         datastruct = datastruct_func(
@@ -433,6 +450,7 @@ class FTACV_experiment:
         elif self._Nac == 2:
             self.harmonic_alloc = dual_AC
         elif self._Nac == 3:
+            self._Nmax = 6
             self.harmonic_alloc = triplicate_AC
         else:
             raise ValueError(

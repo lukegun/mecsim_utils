@@ -14,35 +14,35 @@ import mecsim_utils.processing.window_func as ft_wind
 import matplotlib.pyplot as plt
 
 
+import polars as pl
+
+
+class dummy_exp_ftacv:
+
+
+    def __init__(self):
+
+        self.AC = [{"f":2.700835e+01}]  
+        self.time_tot =      2.684352e+01 
+
+        return
+
 # dummy AC case
 def main():
 
     test_case = 0
     exp_inp = (
-        "tests/testingconfig/MasterE.inp",
-        "tests/testingconfig/MasterE_2ACbadtest.inp",
-        "tests/testingconfig/POM_Example.inp",
-        "tests/testingconfig/MasterE_2AC.inp",
-        "tests/testingconfig/MasterE_3AC.inp",
+        "test_au.txt",
     )
 
-    Mec_parser = INP_DataModel(exp_inp[test_case], to_struct=True)
-    MECsimstruct = (
-        Mec_parser.transform()
-    )  # I can modify this to shift between DC and FTACV
-
-    """I SHOULD PUT SOMETHING HERE TO MORE CLEANLY WRAP THE mecsim instance and the transformation"""
-    Currenttot = mecUtils.mecsim_current(MECsimstruct)
+    df = pl.read_csv(source=exp_inp[test_case], skip_rows=19,
+                      separator='\t',new_columns=["v","i","t"], has_header=False)
+    Currenttot =  df['i'].to_numpy()
 
     frequency_curr, frequency_space = ftcount.frequency_transform(
-        Currenttot, MECsimstruct.time_tot
+        Currenttot, df['t'][-1]
     )
-    plt.figure()
-    plt.plot(frequency_space[:int(frequency_space.shape[0]/2)], 
-             np.log10(frequency_curr[:int(frequency_space.shape[0]/2)]))
-    plt.xlim(0,200)
-    plt.savefig("test.png")
-    plt.close()
+    MECsimstruct = dummy_exp_ftacv()
 
     # TODO RENAME
     Ftacv_Class = ftcount.FTACV_experiment(MECsimstruct, threshold=1.15)

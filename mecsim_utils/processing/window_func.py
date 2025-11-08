@@ -48,7 +48,12 @@ def rg_guassconv(x, band, mean, std):
     )
 
     # normalization for ease of computation
-    z = z / np.max(z)
+    z_max = np.max(z)
+    z = z / z_max
+
+    # TESTING FUNCTION
+    if z_max == 0 or np.isnan(z_max):
+        print(band,mean,z_max,"FUCKcunt")
 
     # this deals with the imaginary component (added as moved it to fft)
     n = int((x.shape[0]) / 2)
