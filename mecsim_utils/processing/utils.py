@@ -9,7 +9,8 @@ from ..transformations.mecsim.datamodel import MECSIM_DataModel
 mecsim_fortran = mecs_get()
 
 
-# this is a generic function for converting the datamodel struct into mecsim compadable stuff and running
+# this is a generic function for converting the datamodel
+# struct into mecsim compadable stuff and running
 def mecsim_current(structmodel):
     # convert data into a dictionary from dataframe
     mecsimclass = MECSIM_DataModel(structmodel)

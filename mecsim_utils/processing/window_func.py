@@ -51,10 +51,6 @@ def rg_guassconv(x, band, mean, std):
     z_max = np.max(z)
     z = z / z_max
 
-    # TESTING FUNCTION
-    if z_max == 0 or np.isnan(z_max):
-        print(band,mean,z_max,"FUCKcunt")
-
     # this deals with the imaginary component (added as moved it to fft)
     n = int((x.shape[0]) / 2)
     f = z[:n]
@@ -92,12 +88,13 @@ def auto_flatten(harm, percentage):
     return harm
 
 
-# this function takes the filter and ftt_current and outputs a harmonic envelope
+# this function takes the filter and ftt_current and
+# outputs a harmonic envelope
 def harmonic_envelope(Convguass, frequency_curr, fundimental):
 
     N = frequency_curr.shape[0]  # int(np.floor(frequency_curr.shape[0]/2))
 
-    ## FLIP IT OR SET IMAGINARY TO O
+    # FLIP IT OR SET IMAGINARY TO O
     h = np.zeros(N, dtype=frequency_curr.dtype)
     if N % 2 == 0:
         h[0] = h[N // 2] = 1
@@ -185,7 +182,8 @@ class harmonics_generate:
 
             if y_full > y_deci and d_ratio < 1:  # just a saftey check
                 # POSSIBLY DECIMATE THE HARMONICS FOR OPTIMISATION
-                # print("CUNT",np.max(frequency_space),np.log2(frequency_space.shape)) # try deci 4
+                # print("CUNT",np.max(frequency_space),np.log2(frequency_space.shape))
+                # try deci 4
                 d = int(frequency_curr.shape[0] * d_ratio / 2)
                 frequency_curr = (
                     np.concatenate((frequency_curr[:d], frequency_curr[-d:])) * d_ratio

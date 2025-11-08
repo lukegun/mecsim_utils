@@ -18,7 +18,11 @@ def mecs_get():
         if python_version == "3.12" and cpu_arch == "x86_64":
             from .python_312.mecsim import mecsim_main  # load in python_312
         else:
-            message = f"ERROR: compiled MECSim's not compadable with python version {python_version} and cpu arch {cpu_arch}"
+            message = (
+                f"ERROR: compiled MECSim's not compadable with "
+                f"python version {python_version} "
+                f"and cpu arch {cpu_arch}."
+            )
             raise ValueError(message)
 
     except ValueError as e:
@@ -26,7 +30,3 @@ def mecs_get():
         exit(1)
 
     return mecsim_main
-
-
-if __name__ == "__main__":
-    mecsim = mec_get()

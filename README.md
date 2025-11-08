@@ -4,7 +4,7 @@ This is a repo to make module that has been made for a range of mecsim FTAC volt
 
 # TODO TOMMOROW
 - refactor harmonics (Map out the process)
-- why is the 3AC not passing AC validation 
+- why is the 3AC not passing AC validation
     (ISSUE is so many combination it overloads the possible harmonics this needs a fix)
 - see if theres a way to remove the currently two FFT's that are done
 - validate accuracy
@@ -18,12 +18,13 @@ SOME smart way to lo9ad in files
 
 
 # TODO
-- Confirm the accuracy of the stuff (50:50)
 
-- ADD a check if AC freq amplitude != 0 in INP to mecstracture (VALIDATOR ????)
-- MOVE HARM CALC INTO A SINGLE CLASS
-- do the windowing
 - Finish up the unit tests for this component
+- MOVE HARM CALC INTO A SINGLE CLASS
+
+- experimental loaders dynamic
+- upload to SQL database transforms
+
 
 # todo before break
 GET MECWRITTERV3 working and set up

@@ -16,6 +16,9 @@ repos:
   rev: 7.3.0
   hooks:
   - id: flake8
+    # ignores line to lone and whitespace issues
+    args: ["--ignore=E501,E203,W503,W504,E226,E266","mecsim_utils"]
+    exclude: "tests/*"
     #always_run: true
   blocking: false # This hook will not block the commit if it fails
 - repo: local

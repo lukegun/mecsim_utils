@@ -109,9 +109,9 @@ class MECSIM_DataModel:
         ]
 
         # Extract Data into MECSettings
-        """MECSettings = [Temp,Resistance, E_start, E_rev, Ncyc, scanrate, datapoints, 
+        """MECSettings = [Temp,Resistance, E_start, E_rev, Ncyc, scanrate, datapoints,
                Digipotcompad, outputtype, ECtype, pre_equalswitch, fixtimestep,
-               Nfixedsteps, beta, Dstar_min, maxvoltstep, timeres, debugout, 
+               Nfixedsteps, beta, Dstar_min, maxvoltstep, timeres, debugout,
                Advolt, NEVramp,Geotype, planararea, Nsphere, sphererad, Ncyilinders,
                rad_cylinder, cylLen, spacialres, RDErad, RDErots, RDEkinvis, Epzc]"""
 

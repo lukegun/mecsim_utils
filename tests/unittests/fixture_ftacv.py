@@ -18,22 +18,34 @@ import mecsim_utils.processing.utils as mecUtils
         "tests/testingconfig/Master_advanced_ramp.inp",
         "tests/testingconfig/Master_EE_OX.inp",
     ],
+    # TODO add some way to save the information that can be validated
     ids=["E_ox", "E_red", "E_red_2AC", "E_red_3AC", "E_complex_ramp", "EE_ox"],
     scope="module",
 )
 def inp_factory(request):
+
+    # unpack the parameters here
+
     return request.param
 
 
 # this parameterises over the mecsim simulations
 @pytest.fixture(scope="module")
 def current_factory(inp_factory):
+
+    # generate the current and split it with validation data
     Mec_parser = INP_DataModel(inp_factory, to_struct=True)
     MECsimstruct = (
         Mec_parser.transform()
     )  # I can modify this to shift between DC and FTACV
 
-    """I SHOULD PUT SOMETHING HERE TO MORE CLEANLY WRAP THE mecsim instance and the transformation"""
+    """I SHOULD PUT SOMETHING HERE TO MORE CLEANLY WRAP THE
+    mecsim instance and the transformation"""
     Currenttot = mecUtils.mecsim_current(MECsimstruct)
 
     return Currenttot, MECsimstruct
+
+
+#############################################################################################
+####################################### FTACV INP SAMPLES ###################################
+#############################################################################################

@@ -1,8 +1,5 @@
 import numpy as np
-from copy import deepcopy
 import time
-
-from mecsim_utils.processing.auto_ftacv import FTACV_experiment
 
 from mecsim_utils.transformations.inp.datamodel import INP_DataModel
 import mecsim_utils.processing.utils as mecUtils
@@ -38,9 +35,11 @@ def main():
         Currenttot, MECsimstruct.time_tot
     )
     plt.figure()
-    plt.plot(frequency_space[:int(frequency_space.shape[0]/2)], 
-             np.log10(frequency_curr[:int(frequency_space.shape[0]/2)]))
-    plt.xlim(0,200)
+    plt.plot(
+        frequency_space[: int(frequency_space.shape[0] / 2)],
+        np.log10(frequency_curr[: int(frequency_space.shape[0] / 2)]),
+    )
+    plt.xlim(0, 200)
     plt.savefig("test.png")
     plt.close()
 
@@ -50,15 +49,15 @@ def main():
 
     # TO DO SET UP A FUNCTION TO DO WINDOWING AND HARMONIC EXTRACTION
     # TODO add a function to write this function
-    #harmonics_BU = deepcopy(harmonics)
-    #func = ft_wind.harmonics_generate(window_func="guassian", envelope=False)
-    #harmonics = func(Currenttot, MECsimstruct, harmonics)
+    # harmonics_BU = deepcopy(harmonics)
+    # func = ft_wind.harmonics_generate(window_func="guassian", envelope=False)
+    # harmonics = func(Currenttot, MECsimstruct, harmonics)
     t1 = time.time()
     func = ft_wind.harmonics_generate(
         window_func="guassian", envelope=True, flatten_percent=0.01
     )
     harmonics2 = func(Currenttot, MECsimstruct, harmonics)
-    print(time.time()-t1)
+    print(time.time() - t1)
     time.sleep(10)
     t = np.linspace(
         0, MECsimstruct.time_tot, num=int(harmonics[0]["0"].harmonic.shape[0])
@@ -66,8 +65,8 @@ def main():
 
     for keys_p, harms2 in harmonics2.items():
         for keys_c, harms in harms2.items():
-            npp =  max(harms.harmonic)
-            print(f"{keys_p}_{keys_c}",npp)
+            npp = max(harms.harmonic)
+            print(f"{keys_p}_{keys_c}", npp)
             plt.figure()
             plt.plot(t, harms.harmonic)
             plt.savefig(f"pics/{keys_p}_{keys_c}_harm.png")

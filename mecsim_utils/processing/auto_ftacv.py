@@ -6,15 +6,11 @@ auto identifying things involved with processing the ftacv signal
 
 import scipy
 import numpy as np
-import mecsim_utils.utils.utils as Cutils
-from scipy.fft import ifft, fft, fftfreq
+from scipy.fft import fft, fftfreq
 from typing import Optional
 from copy import deepcopy
 
 from dataclasses import dataclass
-
-# plotting functions
-import matplotlib.pyplot as plt
 
 """
     I think I need to sit down and figure out the best way
@@ -36,7 +32,7 @@ def moving_average(x, w):
 
 
 def AC_threshold_check(
-    frequency_current, frequency_space, harmonics, ongoing_freq, threshold=1.15, nmax=12
+    frequency_current, frequency_space, harmonics, ongoing_freq, threshold=1.15
 ):
 
     # get the frequency increment
@@ -46,7 +42,8 @@ def AC_threshold_check(
     # this will need to be a standa alone function
     ln_current = np.log(np.abs(frequency_current))
 
-    # use the ongoing_freq to attempt to mute the harmonics signal for background calculations
+    # use the ongoing_freq to attempt to mute
+    # the harmonics signal for background calculations
     ln_background = deepcopy(ln_current[:n])
 
     for harms in ongoing_freq:
@@ -129,6 +126,7 @@ def check_fundimental(fundimental_harmonic, ongoing_freq):
 
     return fundimental_harmonic
 
+
 def calc_min_band(peak_current, lndiff, AC_freq, df):
 
     adjustedband = False
@@ -188,20 +186,19 @@ def check_harm_band(harms, ongoing_freq, lndiff, df, threshold):
             min(bandidthrange) - minband
         )  # this takes the average between largest and smallest
 
-
         # some arbitrary rule to attempt to estimate the
         # Edge cases (massive AC harmonics)
         # to harmonic overlaps (KILL harmonics)
         hband = min(max_range, 40, 2 * 6 * minband)
 
         # lazy hack for the case where bandwidths can't be identified
-        # This likily occurs during the 
+        # This likily occurs during the
         if hband <= 0.5:
             exist = False
 
-        # TODO put a check in here to if bandwidth doesn't exist as things are in it
+        # TODO put a check in here to if bandwidth
+        # doesn't exist as things are in it
         harms.bandwith = hband
-       
 
     else:
         exist = False
@@ -251,11 +248,13 @@ def calc_secondrary(AC_signals, Max_freq, ongoing_freq=set(), nmax=12):
 
     possible_harmonics = {}
 
-    # only need to do this for the larger of the two  (ie little one splitting of major)
+    # only need to do this for the larger of
+    # the two  (ie little one splitting of major)
     for i in range(1, nmax + 1):
         for j in range(1, nmax + 1):
             p = i + j
-            for z1, z2 in possible_combinations:  # loop over the pos and negitive cases
+            # loop over the pos and negitive cases
+            for z1, z2 in possible_combinations:
                 freq = z1 * i * AC_signals[0] + z2 * j * AC_signals[1]
                 if (
                     freq > 0 and int(freq) not in ongoing_freq and freq < Max_freq
@@ -296,7 +295,8 @@ def calc_tertiary(AC_signals, Max_freq, ongoing_freq=set(), nmax=12):
                     z1,
                     z2,
                     z3,
-                ) in possible_combinations:  # loop over the pos and negitive cases
+                ) in possible_combinations:
+                    # loop over the pos and negitive cases
                     freq = (
                         z1 * i * AC_signals[0]
                         + z2 * j * AC_signals[1]
@@ -402,12 +402,12 @@ def triplicate_AC(AC_signals, Max_freq, nmax=12):
 def rename_labels(harms_dic_old, labels, order):
 
     harms_dic_new = {}
-    l = ["0" for x in range(order)]
+    label_holder = ["0" for x in range(order)]
     for keys, items in harms_dic_old.items():
         s = keys.split(":")
         for i, v in enumerate(labels):
-            l[v] = s[i]
-        new_label = ":".join(l)
+            label_holder[v] = s[i]
+        new_label = ":".join(label_holder)
         harms_dic_new.update({new_label: items})
 
     return harms_dic_new
@@ -419,14 +419,15 @@ def datastruct_func(freq, combination, allocation, harmonic_num):
     datastruct = FTACV_harmonic(
         freq=freq,
         combination=combination,  # dict of AC harmonic combination
-        allocation=allocation,  # 0 for dc, 1 for primrary, 2 for secondary so on
+        allocation=allocation,  # 0 for dc, 1 for primrary, 2 for secondary
         harmonic_num=harmonic_num,
     )
 
     return datastruct
 
 
-# this is the parent class for the FTACV experiment ( this stores and links all the harmonic data structures)
+# this is the parent class for the FTACV experiment
+# ( this stores and links all the harmonic data structures)
 # TODO MAKE THIS MORE LIKE A CLASS WHERE SELF CONTAINED
 class FTACV_experiment:
 
@@ -444,7 +445,8 @@ class FTACV_experiment:
 
         assert self._Nac != 0, "ERROR: no AC signal found for experiment"
 
-        # confirm that the AC allocation function is right for number of AC_signals
+        # confirm that the AC allocation function is
+        # right for number of AC_signals
         if self._Nac == 1:
             self.harmonic_alloc = single_AC
         elif self._Nac == 2:
@@ -454,7 +456,7 @@ class FTACV_experiment:
             self.harmonic_alloc = triplicate_AC
         else:
             raise ValueError(
-                "Number of AC signals greater then 3 are not currently supported"
+                "Number of AC signals greater then" " 3 are not currently supported"
             )
 
         return
@@ -469,7 +471,8 @@ class FTACV_experiment:
         self.max_freq = np.max(frequency_space)
 
         # identify all stable possible AC harmonics
-        # TODO: split up the primrary, secondary and tert harmonics an label in possible harmonic
+        # TODO: split up the primrary, secondary and
+        # tert harmonics an label in possible harmonic
         # another issue is we use hertz labeling and not a nomeculture name
         possible_harmonics, ongoing_freq = self.harmonic_alloc(
             self._AC_signals, self.max_freq, nmax=self._Nmax
@@ -487,7 +490,6 @@ class FTACV_experiment:
             ongoing_freq,
             # TODO MAke this a handled varibles
             threshold=self.threshold,
-            nmax=self._Nmax,
         )
 
         return harmonics

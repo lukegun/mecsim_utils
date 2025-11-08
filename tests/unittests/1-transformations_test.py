@@ -2,6 +2,8 @@
 These tests validate that the MEC data structures all work well
 """
 
+import numpy as np
+
 from mecsim_utils.transformations.inp.datamodel import INP_DataModel
 import mecsim_utils.processing.utils as mecUtils
 
@@ -58,8 +60,18 @@ def test_INP_2_mecsim(inp_factory):
     Mec_parser = INP_DataModel(inp_factory, to_struct=True)
     MECsimstruct = Mec_parser.transform()
 
-    """I SHOULD PUT SOMETHING HERE TO MORE CLEANLY WRAP THE mecsim instance and the transformation"""
+    """I SHOULD PUT SOMETHING HERE TO MORE CLEANLY WRAP THE mecsim
+        instance and the transformation"""
     Currenttot = mecUtils.mecsim_current(MECsimstruct)
+
+    # just some basic checks for structure
+    s = np.log2(Currenttot.shape[0])
+    assert int(s) == s, "ERROR: mecsim current output not divisable by 2"
+
+    message = "ERROR: mexim current has large proportion of 0"
+    assert np.sum(Currenttot == 0) < 0.001 * Currenttot.shape[0], message
+
+    assert not np.isnan(Currenttot).any(), "ERROR: current output countains a nan"
 
     return
 

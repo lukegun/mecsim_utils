@@ -57,7 +57,10 @@ def ac_inp2struct(vallist):
     output = []
     for vals in vallist:
         s = vals.split(",")
-        output.append({"a": float(s[0]), "f": float(s[1])})
+        a, f = float(s[0]), float(s[1])
+        # if a or f equals 0 the sine wave is redundant
+        if a != 0 and f != 0:
+            output.append({"a": a, "f": f})
 
     return output
 
@@ -68,8 +71,8 @@ def kinetic_inp2struct(vallist):
         s = vals.split(",")
 
         kinetic = []
-        for l in s[1 : len(s) - 5]:
-            kinetic.append(int(l))
+        for i in s[1 : len(s) - 5]:
+            kinetic.append(int(i))
 
         output.append(
             {
@@ -166,7 +169,8 @@ def kinetic_struct2inp(vallist):
     return output
 
 
-#### Instead of putting them in config files I'm just putting this info to be embedded into the stuff
+# Instead of putting them in config files I'm just putting this
+# info to be embedded into the stuff
 def get_inp_comments():
     # set up to work with the datastructure keys
     comments_dic = {
@@ -282,6 +286,3 @@ def get_structure_type():
     }
 
     return structtype
-
-
-# TODO set up a pydantic class for testing
