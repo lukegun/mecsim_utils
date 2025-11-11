@@ -35,9 +35,10 @@ def check_inp_line(input_INP, transformed_lines, comment, ni, n):
 
 # check if the inp to data transformation works
 def test_INP_2_data(inp_factory):
-    input_INP = example_input(inp_factory)
+    # removed as test examples are list[str]
+    input_INP = inp_factory.inp_file
 
-    Mec_parser = INP_DataModel(inp_factory, to_struct=True)
+    Mec_parser = INP_DataModel(input_INP, to_struct=True)
     MECsimstruct = Mec_parser.transform()
 
     Mec_parser2 = INP_DataModel(MECsimstruct, to_struct=False)
@@ -57,7 +58,7 @@ def test_INP_2_data(inp_factory):
 
 # this checks if MECSIM works right
 def test_INP_2_mecsim(inp_factory):
-    Mec_parser = INP_DataModel(inp_factory, to_struct=True)
+    Mec_parser = INP_DataModel(inp_factory.inp_file, to_struct=True)
     MECsimstruct = Mec_parser.transform()
 
     """I SHOULD PUT SOMETHING HERE TO MORE CLEANLY WRAP THE mecsim

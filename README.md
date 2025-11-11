@@ -22,6 +22,7 @@ SOME smart way to lo9ad in files
 - Finish up the unit tests for this component
 - MOVE HARM CALC INTO A SINGLE CLASS
 
+- set up the auto capacitance fitting
 - experimental loaders dynamic
 - upload to SQL database transforms
 
