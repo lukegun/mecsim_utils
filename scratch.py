@@ -58,7 +58,7 @@ def main():
     )
     harmonics2 = func(Currenttot, MECsimstruct, harmonics)
     print(time.time() - t1)
-    #time.sleep(10)
+    # time.sleep(10)
     t = np.linspace(
         0, MECsimstruct.time_tot, num=int(harmonics[0]["0"].harmonic.shape[0])
     )

@@ -1,6 +1,6 @@
-# This is a generic script 
+# This is a generic script
 # that loads in an INP and generates
-#  a .txt woth the information required to generate a 
+#  a .txt woth the information required to generate a
 # data struction used to generate a inp file
 
 
@@ -17,17 +17,17 @@ import mecsim_utils.processing.window_func as ft_wind
 import matplotlib.pyplot as plt
 
 exp_inp = (
-        "tests/testingconfig/MasterE.inp",
-        "tests/testingconfig/Master.inp",
-        "tests/testingconfig/POM_Example.inp",
-        "tests/testingconfig/Master_EE_OX.inp",
-        "tests/testingconfig/MasterE_2AC.inp",
-        "tests/testingconfig/MasterE_3AC.inp",
-    )
+    "tests/testingconfig/MasterE.inp",
+    "tests/testingconfig/Master.inp",
+    "tests/testingconfig/POM_Example.inp",
+    "tests/testingconfig/Master_EE_OX.inp",
+    "tests/testingconfig/MasterE_2AC.inp",
+    "tests/testingconfig/MasterE_3AC.inp",
+)
+
 
 # dummy AC case
-def main(test_case = 0):
-
+def main(test_case=0):
 
     Mec_parser = INP_DataModel(exp_inp[test_case], to_struct=True)
     MECsimstruct = (
@@ -52,16 +52,16 @@ def main(test_case = 0):
     )
     harmonics2 = func(Currenttot, MECsimstruct, harmonics)
     print(time.time() - t1)
-    #time.sleep(10)
+    # time.sleep(10)
     t = np.linspace(
         0, MECsimstruct.time_tot, num=int(harmonics[0]["0"].harmonic.shape[0])
     )
 
-    harm_dic = {    }
-    i = 0 
+    harm_dic = {}
+    i = 0
     for keys_p, harms2 in harmonics2.items():
         print(keys_p, type(keys_p))
-        harm_dic.update({keys_p:{}})
+        harm_dic.update({keys_p: {}})
         for keys_c, harms in harms2.items():
             i += 1
             print(keys_c, type(keys_c))
@@ -69,19 +69,17 @@ def main(test_case = 0):
             itemindex = np.argwhere(harms.harmonic == npp)
 
             val = (float(npp), int(itemindex[0][0]))
-            harm_dic[keys_p].update({keys_c:val})
-            
+            harm_dic[keys_p].update({keys_c: val})
 
     print(harm_dic)
     # generate an amount of validation features
     print("Nharm: ", i)
-    print("shape current: ",Currenttot.shape[0])
-    print("mean current: ",np.average(Currenttot))
-
+    print("shape current: ", Currenttot.shape[0])
+    print("mean current: ", np.average(Currenttot))
 
     print(Mec_parser.datanum)
 
-    # print a information into a txtfile that somarises the value in datastruct format 
+    # print a information into a txtfile that somarises the value in datastruct format
 
 
 if __name__ == "__main__":

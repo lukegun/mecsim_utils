@@ -9,6 +9,7 @@ import tests.unittests.mecsim_examples as mec_examples  # fixtures
 from mecsim_utils.transformations.inp.datamodel import INP_DataModel
 import mecsim_utils.processing.utils as mecUtils
 
+
 # this parameterises over all the experimental input files
 @pytest.fixture(
     params=[
@@ -18,7 +19,6 @@ import mecsim_utils.processing.utils as mecUtils
     # TODO add some way to save the information that can be validated
     ids=["E_ox", "E_red"],
     scope="module",
-
 )
 def inp_factory(request):
 
@@ -40,6 +40,8 @@ def current_factory(inp_factory):
 
     """I SHOULD PUT SOMETHING HERE TO MORE CLEANLY WRAP THE
     mecsim instance and the transformation"""
-    Currenttot = mecUtils.mecsim_current(MECsimstruct, )
+    Currenttot = mecUtils.mecsim_current(
+        MECsimstruct,
+    )
 
     return Currenttot, MECsimstruct, inp_factory
