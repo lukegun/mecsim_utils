@@ -22,7 +22,7 @@ def square_window(x, band, mu):
     z[nlow:nhigh] = 1
     # this adds it in for the windowing function
 
-    if mu == 0:  # correction for fundimental case
+    if nlow == 0:  # correction for fundimental case
         z[-nhigh:] = 1
     else:
         z[-nhigh:-nlow] = 1
