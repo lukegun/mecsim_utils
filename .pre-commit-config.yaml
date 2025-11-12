@@ -4,7 +4,7 @@ repos:
   rev: v6.0.0  # release version of the repo
   hooks:  # list of hooks from the repo to include in this project
   -   id: end-of-file-fixer
-  -   id: trailing-whitespace
+  #-   id: trailing-whitespace
   -   id: check-yaml
       args: ['--unsafe']  # add arguments to `check-yaml`
 - repo: https://github.com/psf/black

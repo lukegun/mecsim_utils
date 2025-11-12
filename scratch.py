@@ -54,7 +54,7 @@ def main():
     # harmonics = func(Currenttot, MECsimstruct, harmonics)
     t1 = time.time()
     func = ft_wind.harmonics_generate(
-        window_func="guassian", envelope=True, flatten_percent=0.01
+        window_func="square", envelope=False, flatten_percent=0.01
     )
     harmonics2 = func(Currenttot, MECsimstruct, harmonics)
     print(time.time() - t1)

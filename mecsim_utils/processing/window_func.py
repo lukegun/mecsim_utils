@@ -18,12 +18,16 @@ def square_window(x, band, mu):
     if nlow < 0:
         nlow = 0
 
-    x = np.zeros(len(x))
-    x[nlow:nhigh] = 1
+    z = np.zeros(len(x))
+    z[nlow:nhigh] = 1
     # this adds it in for the windowing function
-    x[-nhigh:-nlow] = 1
 
-    return x
+    if mu == 0:  # correction for fundimental case
+        z[-nhigh:] = 1
+    else:
+        z[-nhigh:-nlow] = 1
+
+    return z
 
 
 # wrappers to unpack the harmonic info and pass to the convolution case
@@ -181,8 +185,6 @@ class harmonics_generate:
             d_ratio = 1 / (2 ** (y_full - y_deci))
 
             if y_full > y_deci and d_ratio < 1:  # just a saftey check
-                # POSSIBLY DECIMATE THE HARMONICS FOR OPTIMISATION
-                # print("CUNT",np.max(frequency_space),np.log2(frequency_space.shape))
                 # try deci 4
                 d = int(frequency_curr.shape[0] * d_ratio / 2)
                 frequency_curr = (
@@ -214,6 +216,7 @@ class harmonics_generate:
 
                 # generate the harmonics
                 Convguass = self.windowing(frequency_space, harms)
+
                 harm = self.generation(Convguass, frequency_curr, harms.freq)
 
                 # add something in here to opptionally flattern the spectral filtering
