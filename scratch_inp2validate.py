@@ -20,6 +20,7 @@ exp_inp = (
     "tests/testingconfig/MasterE.inp",
     "tests/testingconfig/Master.inp",
     "tests/testingconfig/POM_Example.inp",
+    "tests/testingconfig/Master_EE_RED.inp",
     "tests/testingconfig/Master_EE_OX.inp",
     "tests/testingconfig/MasterE_2AC.inp",
     "tests/testingconfig/MasterE_3AC.inp",
@@ -28,7 +29,7 @@ exp_inp = (
 
 # dummy AC case
 def main(test_case=0):
-
+    print(f"RUNNING: {exp_inp[test_case]}")
     Mec_parser = INP_DataModel(exp_inp[test_case], to_struct=True)
     MECsimstruct = (
         Mec_parser.transform()
@@ -51,7 +52,6 @@ def main(test_case=0):
         window_func="guassian", envelope=True, flatten_percent=0.025
     )
     harmonics2 = func(Currenttot, MECsimstruct, harmonics)
-    print(time.time() - t1)
     # time.sleep(10)
     t = np.linspace(
         0, MECsimstruct.time_tot, num=int(harmonics[0]["0"].harmonic.shape[0])
@@ -60,16 +60,19 @@ def main(test_case=0):
     harm_dic = {}
     i = 0
     for keys_p, harms2 in harmonics2.items():
-        print(keys_p, type(keys_p))
         harm_dic.update({keys_p: {}})
         for keys_c, harms in harms2.items():
             i += 1
-            print(keys_c, type(keys_c))
             npp = max(harms.harmonic)
             itemindex = np.argwhere(harms.harmonic == npp)
 
             val = (float(npp), int(itemindex[0][0]))
             harm_dic[keys_p].update({keys_c: val})
+            plt.figure()
+            plt.plot(t, harms.harmonic)
+            plt.savefig(f"pics/{keys_p}_{keys_c}_harm.png")
+            plt.close()
+
 
     print(harm_dic)
     # generate an amount of validation features
@@ -83,4 +86,4 @@ def main(test_case=0):
 
 
 if __name__ == "__main__":
-    main(test_case=1)
+    main(test_case=0)

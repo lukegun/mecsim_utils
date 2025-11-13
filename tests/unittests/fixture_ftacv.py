@@ -9,15 +9,22 @@ import tests.unittests.mecsim_examples as mec_examples  # fixtures
 from mecsim_utils.transformations.inp.datamodel import INP_DataModel
 import mecsim_utils.processing.utils as mecUtils
 
+# this packs a list of pointers to that we can load it in
+def generate_mecsamples(data_cls_list):
+
+    pytest_list = []
+    for data_cls in data_cls_list:
+        data = data_cls
+        pytest_list.append(pytest.param(data, id = data.id))
+
+    return pytest_list
+
+## TODO make this so that we can query subsets of the examples (WRapper fixtures???)
 
 # this parameterises over all the experimental input files
 @pytest.fixture(
-    params=[
-        mec_examples.example_ftacvE_red,
-        mec_examples.example_ftacvE_ox,
-    ],
-    # TODO add some way to save the information that can be validated
-    ids=["E_ox", "E_red"],
+    # TODO MOVE TO FIXTURE AS RETURNED CALL FUNCTION
+    params=generate_mecsamples(mec_examples.get_AC_cases()),
     scope="module",
 )
 def inp_factory(request):
