@@ -24,19 +24,21 @@ def generate_mecsamples(data_cls_list):
 # this parameterises over all the experimental input files
 @pytest.fixture(
     # TODO MOVE TO FIXTURE AS RETURNED CALL FUNCTION
-    params=generate_mecsamples(mec_examples.get_AC_cases()),
-    scope="module",
+    params = generate_mecsamples(mec_examples.get_AC_cases()),
+    scope = "module",
+    autouse = True
 )
 def inp_factory(request):
 
     # unpack the parameters here
     mecsim_data = request.param()
 
-    return mecsim_data
+    yield mecsim_data
 
 
 # this parameterises over the mecsim simulations
-@pytest.fixture(scope="module")
+# TODO optimise this so that it only runs once accross everything
+@pytest.fixture(scope="module", autouse=True)
 def current_factory(inp_factory):
 
     # generate the current and split it with validation data
@@ -51,4 +53,4 @@ def current_factory(inp_factory):
         MECsimstruct,
     )
 
-    return Currenttot, MECsimstruct, inp_factory
+    yield Currenttot, MECsimstruct, inp_factory
