@@ -5,7 +5,6 @@
 
 
 import numpy as np
-import time
 
 from mecsim_utils.transformations.inp.datamodel import INP_DataModel
 import mecsim_utils.processing.utils as mecUtils
@@ -16,14 +15,15 @@ import mecsim_utils.processing.window_func as ft_wind
 
 import matplotlib.pyplot as plt
 
+test_case = 3
+inp_loc = "tests/testingconfig"
 exp_inp = (
-    "tests/testingconfig/MasterE.inp",
-    "tests/testingconfig/Master.inp",
-    "tests/testingconfig/POM_Example.inp",
-    "tests/testingconfig/Master_EE_RED.inp",
-    "tests/testingconfig/Master_EE_OX.inp",
-    "tests/testingconfig/MasterE_2AC.inp",
-    "tests/testingconfig/MasterE_3AC.inp",
+    f"{inp_loc}/Master_EC1_OX.inp",
+    f"{inp_loc}/Master_EC1_RED.inp",
+    f"{inp_loc}/Master_EC2_OX.inp",
+    f"{inp_loc}/Master_EC2_RED.inp",
+    f"{inp_loc}/MasterE_2AC.inp",
+    f"{inp_loc}/MasterE_3AC.inp",
 )
 
 
@@ -47,7 +47,6 @@ def main(test_case=0):
     # harmonics_BU = deepcopy(harmonics)
     # func = ft_wind.harmonics_generate(window_func="guassian", envelope=False)
     # harmonics = func(Currenttot, MECsimstruct, harmonics)
-    t1 = time.time()
     func = ft_wind.harmonics_generate(
         window_func="guassian", envelope=True, flatten_percent=0.025
     )
@@ -73,7 +72,6 @@ def main(test_case=0):
             plt.savefig(f"pics/{keys_p}_{keys_c}_harm.png")
             plt.close()
 
-
     print(harm_dic)
     # generate an amount of validation features
     print("Nharm: ", i)
@@ -86,4 +84,4 @@ def main(test_case=0):
 
 
 if __name__ == "__main__":
-    main(test_case=0)
+    main(test_case=test_case)

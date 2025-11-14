@@ -15,12 +15,10 @@ import matplotlib.pyplot as plt
 def main():
 
     test_case = 0
+    inp_loc = "tests/testingconfig"
     exp_inp = (
-        "tests/testingconfig/MasterE.inp",
-        "tests/testingconfig/MasterE_2ACbadtest.inp",
-        "tests/testingconfig/POM_Example.inp",
-        "tests/testingconfig/MasterE_2AC.inp",
-        "tests/testingconfig/MasterE_3AC.inp",
+        f"{inp_loc}" f"{inp_loc}/MasterE_2AC.inp",
+        f"{inp_loc}/MasterE_3AC.inp",
     )
 
     Mec_parser = INP_DataModel(exp_inp[test_case], to_struct=True)

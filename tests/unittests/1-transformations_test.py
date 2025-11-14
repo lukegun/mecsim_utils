@@ -8,7 +8,7 @@ from mecsim_utils.transformations.inp.datamodel import INP_DataModel
 import mecsim_utils.processing.utils as mecUtils
 
 # load in the sample testing stuff
-from tests.unittests.fixture_ftacv import inp_factory, current_factory # fixtures
+from tests.unittests.fixture_ftacv import inp_factory, current_factory  # fixtures
 
 
 def inp_split(string):
@@ -61,7 +61,7 @@ def test_INP_2_mecsim(current_factory):
 
     # attempt to get the error out
     Currenttot, _, _ = current_factory
-    
+
     # just some basic checks for structure
     s = np.log2(Currenttot.shape[0])
     assert int(s) == s, "ERROR: mecsim current output not divisable by 2"

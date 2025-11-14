@@ -66,16 +66,17 @@ def test_auto_harmcount(current_factory, window_func, envelope):
         for keys_c, harms in harms2.items():
             i += 1  # count the harmonics present
             expected_val = validation_data.harmdic[keys_p][keys_c][0]
-            
+
             # get the max value of the harmonics ignoring the windowing that occurs for the total current
             current_harm = harmonics[keys_p][keys_c].harmonic
 
-            s_int = int(current_harm.shape[0]*validation_data.flattern_percentage)
-            s_end = int(current_harm.shape[0]*(1-validation_data.flattern_percentage))
-
+            s_int = int(current_harm.shape[0] * validation_data.flattern_percentage)
+            s_end = int(
+                current_harm.shape[0] * (1 - validation_data.flattern_percentage)
+            )
 
             npp_ind = np.argmax(current_harm[s_int:s_end])
-            npp = current_harm[s_int+npp_ind]
+            npp = current_harm[s_int + npp_ind]
 
             found_val = npp  # quick_scientific_round(npp, round_acc)
 
@@ -90,8 +91,8 @@ def test_auto_harmcount(current_factory, window_func, envelope):
     message = "ERROR, Number in time series matches the expected size"
     assert validation_data.shape == Currenttot.shape[0], message
     message = "ERROR, average "
-    assert quick_scientific_round(
-        validation_data.average, 6
-    ) == quick_scientific_round(np.average(Currenttot), 6), message
+    assert quick_scientific_round(validation_data.average, 6) == quick_scientific_round(
+        np.average(Currenttot), 6
+    ), message
 
     return
