@@ -2,6 +2,9 @@
 This is a repo to make module that has been made for a range of mecsim FTAC voltammetry AI  systems
 
 
+# UNIT TESTS
+python -m pytest --cov --config-file=.coveragerc
+
 # TODO TOMMOROW
 - refactor harmonics (Map out the process)
 - why is the 3AC not passing AC validation

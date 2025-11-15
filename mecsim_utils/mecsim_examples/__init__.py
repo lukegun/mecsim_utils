@@ -1,7 +1,7 @@
 # this builds all the mecsim examples into a usefull callable systems
 
 # this are all the standard FTACV examples we are loading in
-from .hetrogeneous import (
+from mecsim_utils.mecsim_examples.hetrogeneous import (
     example_ftacvE_red,
     example_ftacvE_ox,
     example_ftacvEE_red,
@@ -12,7 +12,7 @@ from .hetrogeneous import (
     example_ftacvEC2_ox,
 )
 
-from .homogeneous import (
+from mecsim_utils.mecsim_examples.homogeneous import (
     example_ftacvEsurf_red,
     example_ftacvEsurf_ox,
     example_ftacvEEsurf_red,

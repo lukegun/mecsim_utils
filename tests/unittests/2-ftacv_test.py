@@ -21,6 +21,15 @@ def quick_scientific_round(num, accuracy):
 def test_frequency_transform(current_factory):
     Currenttot, MECsimstruct, _ = current_factory
 
+    # just some basic checks for structure
+    s = np.log2(Currenttot.shape[0])
+    assert int(s) == s, "ERROR: mecsim current output not divisable by 2"
+
+    message = "ERROR: mexim current has large proportion of 0"
+    assert np.sum(Currenttot == 0) < 0.001 * Currenttot.shape[0], message
+
+    assert not np.isnan(Currenttot).any(), "ERROR: current output countains a nan"
+
     frequency_curr, frequency_space = ftcount.frequency_transform(
         Currenttot, MECsimstruct.time_tot
     )

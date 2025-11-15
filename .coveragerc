@@ -1,0 +1,4 @@
+[run]
+source=mecsim_utils
+# We exclude these as there mostly static example templates
+omit = mecsim_utils/mecsim_examples/*

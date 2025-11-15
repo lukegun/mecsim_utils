@@ -5,10 +5,9 @@ These tests validate that the MEC data structures all work well
 import numpy as np
 
 from mecsim_utils.transformations.inp.datamodel import INP_DataModel
-import mecsim_utils.processing.utils as mecUtils
 
 # load in the sample testing stuff
-from tests.unittests.fixture_ftacv import inp_factory, current_factory  # fixtures
+from tests.unittests.fixture_ftacv import inp_factory  # fixtures
 
 
 def inp_split(string):
@@ -54,24 +53,6 @@ def test_INP_2_data(inp_factory):
     assert len(input_INP) == len(
         transformed_lines
     ), "ERROR: number of lines don't match"
-
-
-# this checks if MECSIM works right
-def test_INP_2_mecsim(current_factory):
-
-    # attempt to get the error out
-    Currenttot, _, _ = current_factory
-
-    # just some basic checks for structure
-    s = np.log2(Currenttot.shape[0])
-    assert int(s) == s, "ERROR: mecsim current output not divisable by 2"
-
-    message = "ERROR: mexim current has large proportion of 0"
-    assert np.sum(Currenttot == 0) < 0.001 * Currenttot.shape[0], message
-
-    assert not np.isnan(Currenttot).any(), "ERROR: current output countains a nan"
-
-    return
 
 
 # validate that the data structors converted match a specific data class PYDANTIC???
