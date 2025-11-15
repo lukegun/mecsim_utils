@@ -1,0 +1,6 @@
+## THIS IS A config file for running cloc
+# Run the following command in main
+# cloc --config .cloc_options.txt .
+
+# file don't need to be checked by cloc as mostly templating standards used for unit testing
+--exclude-dir=mecsim_examples
