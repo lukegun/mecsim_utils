@@ -5,7 +5,7 @@ These functions set the sample input features to be used in the testsing
 import pytest
 
 # load in the sample testing stuff
-import tests.unittests.mecsim_examples as mec_examples  # fixtures
+import mecsim_utils.mecsim_examples as mec_examples  # fixtures
 from mecsim_utils.transformations.inp.datamodel import INP_DataModel
 import mecsim_utils.processing.utils as mecUtils
 

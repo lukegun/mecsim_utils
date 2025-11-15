@@ -19,7 +19,7 @@ SOME smart way to lo9ad in files
 
 # TODO
 
-- Finish up the unit tests for this component
+- Finish up the unit tests for this component (add Esurf, ECE, MULTIAC cases, Capacitance linear and non-linear, DC cases )
 - MOVE HARM CALC INTO A SINGLE CLASS
 
 - set up the auto capacitance fitting
