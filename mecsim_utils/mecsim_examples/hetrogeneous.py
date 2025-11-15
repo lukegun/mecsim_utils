@@ -80,7 +80,7 @@ class example_ftacvE_ox(FTACV_base_setup):
     )
     testing_use: str = "This covers a generic E oxidation case with minor resistance"
     AC_case: bool = True
-    id: str = "ox_E."
+    id: str = "ox__E."
     ft_threshold: float = 1.15
     flattern_percentage: float = 0.025
 
@@ -162,7 +162,7 @@ class example_ftacvE_red(FTACV_base_setup):
     )
     testing_use: str = "This covers a generic E reduction case with no resistance"
     AC_case: bool = True
-    id: str = "red_E."
+    id: str = "red__E."
     ft_threshold: float = 1.15
     flattern_percentage: float = 0.025
 
@@ -251,7 +251,7 @@ class example_ftacvEE_ox(FTACV_base_setup):
         "This covers a generic EE oxidation case with somewhat high resistance and a quasireversible electrode kinetics"
     )
     AC_case: bool = True
-    id: str = "ox_E-E."
+    id: str = "ox__E-E."
     ft_threshold: float = 1.15
     flattern_percentage: float = 0.025
 
@@ -336,7 +336,7 @@ class example_ftacvEE_red(FTACV_base_setup):
         "This covers a generic EE reduction case with minimal resistance, quasireversible and mild asymetry of electrod kinetics"
     )
     AC_case: bool = True
-    id: str = "red_E-E."
+    id: str = "red__E-E."
     ft_threshold: float = 1.15
     flattern_percentage: float = 0.025
 
@@ -423,7 +423,7 @@ class example_ftacvEC1_ox(FTACV_base_setup):
         " with minimal resistance, c reaction is completely irrevesible"
     )
     AC_case: bool = True
-    id: str = "ox_E-C1."
+    id: str = "ox__E-C1."
     ft_threshold: float = 1.15
     flattern_percentage: float = 0.025
 
@@ -510,7 +510,7 @@ class example_ftacvEC1_red(FTACV_base_setup):
         "1st order C case with minimal resistance"
     )
     AC_case: bool = True
-    id: str = "red_E-C1."
+    id: str = "red__E-C1."
     ft_threshold: float = 1.15
     flattern_percentage: float = 0.025
 
@@ -599,7 +599,7 @@ class example_ftacvEC2_ox(FTACV_base_setup):
         " with minimal resistance, 2nd order c reaction is quasi-revesible"
     )
     AC_case: bool = True
-    id: str = "ox_E-C2."
+    id: str = "ox__E-C2."
     ft_threshold: float = 1.15
     flattern_percentage: float = 0.025
 
@@ -686,7 +686,7 @@ class example_ftacvEC2_red(FTACV_base_setup):
         " with minimal resistance"
     )
     AC_case: bool = True
-    id: str = "red_E-C2."
+    id: str = "red__E-C2."
     ft_threshold: float = 1.15
     flattern_percentage: float = 0.025
 

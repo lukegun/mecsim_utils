@@ -12,14 +12,20 @@ from .hetrogeneous import (
     example_ftacvEC2_ox,
 )
 
-# from .homogeneous import example_ftacvESurf_red, example_ftacvESurf_ox
+from .homogeneous import (
+    example_ftacvEsurf_red,
+    example_ftacvEsurf_ox,
+    example_ftacvEEsurf_red,
+    example_ftacvEEsurf_ox,
+)
 
 # IS THERE A CLEANER WAY TO ORGANISE THIS ????
 
 
 ########## These functions collect the functions and group them
 # This could be done by marks but I am aiming to have this non pydantic based
-def get_AC_cases():
+def get_AC_homogeneous_cases():
+    # could I nest these
     AC_examples = [
         example_ftacvE_red,
         example_ftacvE_ox,
@@ -30,4 +36,21 @@ def get_AC_cases():
         example_ftacvEC2_red,
         example_ftacvEC2_ox,
     ]
+    return AC_examples
+
+
+def get_AC_hetrogeneous_cases():
+    # could I nest these
+    AC_examples = [
+        example_ftacvEsurf_red,
+        example_ftacvEsurf_ox,
+        example_ftacvEEsurf_red,
+        example_ftacvEEsurf_ox,
+    ]
+    return AC_examples
+
+
+def get_AC_cases():
+    # could I nest these
+    AC_examples = get_AC_homogeneous_cases() + get_AC_hetrogeneous_cases()
     return AC_examples

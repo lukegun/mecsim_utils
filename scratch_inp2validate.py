@@ -18,12 +18,10 @@ import matplotlib.pyplot as plt
 test_case = 3
 inp_loc = "tests/testingconfig"
 exp_inp = (
-    f"{inp_loc}/Master_EC1_OX.inp",
-    f"{inp_loc}/Master_EC1_RED.inp",
-    f"{inp_loc}/Master_EC2_OX.inp",
-    f"{inp_loc}/Master_EC2_RED.inp",
-    f"{inp_loc}/MasterE_2AC.inp",
-    f"{inp_loc}/MasterE_3AC.inp",
+    f"{inp_loc}/Master_ESurf_OX.inp",
+    f"{inp_loc}/Master_ESurf_RED.inp",
+    f"{inp_loc}/Master_ESurf_C_OX.inp",
+    f"{inp_loc}/Master_ESurf_C_RED.inp",
 )
 
 

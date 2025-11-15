@@ -20,11 +20,9 @@ SOME smart way to lo9ad in files
 # TODO
 
 - Finish up the unit tests for this component 
-    1. Hetrogeneous reactions, 
-    2. complex Homogeneous
     3. MULTI AC cases
     4. DC cases including Capacitance linear and non-linear
-    5. Comlplex hetrogeneous (mediated catalyse)
+    5. Comlplex hetrogeneous (mediated catalyse (three steps of catalyse))
     6. Marcus-hush 
 
 - MOVE HARM CALC INTO A SINGLE CLASS
