@@ -15,13 +15,11 @@ import mecsim_utils.processing.window_func as ft_wind
 
 import matplotlib.pyplot as plt
 
-test_case = 3
+test_case = 1
 inp_loc = "tests/testingconfig"
 exp_inp = (
-    f"{inp_loc}/Master_ESurf_OX.inp",
-    f"{inp_loc}/Master_ESurf_RED.inp",
-    f"{inp_loc}/Master_ESurf_C_OX.inp",
-    f"{inp_loc}/Master_ESurf_C_RED.inp",
+    f"{inp_loc}/MasterE_2AC.inp",
+    f"{inp_loc}/MasterE_3AC.inp",
 )
 
 
@@ -67,6 +65,7 @@ def main(test_case=0):
             harm_dic[keys_p].update({keys_c: val})
             plt.figure()
             plt.plot(t, harms.harmonic)
+            plt.title(f"{harms.freq}")
             plt.savefig(f"pics/{keys_p}_{keys_c}_harm.png")
             plt.close()
 

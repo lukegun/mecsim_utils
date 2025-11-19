@@ -23,10 +23,12 @@ SOME smart way to lo9ad in files
 # TODO
 
 - Finish up the unit tests for this component 
+    TODO FIX THE AUTO HARM CASE FOR VERY HIGH FREQUENCY INFORMATION
     3. MULTI AC cases
     4. DC cases including Capacitance linear and non-linear
     5. Comlplex hetrogeneous (mediated catalyse (three steps of catalyse))
     6. Marcus-hush 
+    7. double check the testing use
 
 - MOVE HARM CALC INTO A SINGLE CLASS
 

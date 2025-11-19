@@ -19,10 +19,16 @@ from mecsim_utils.mecsim_examples.homogeneous import (
     example_ftacvEEsurf_ox,
 )
 
+from mecsim_utils.mecsim_examples.multi_AC import (
+    example_ftacvE_2AC_ox,
+    example_ftacvE_3AC_ox,
+)
+
 # IS THERE A CLEANER WAY TO ORGANISE THIS ????
 
 
 ########## These functions collect the functions and group them
+# TODO CLEAN THIS UP
 # This could be done by marks but I am aiming to have this non pydantic based
 def get_AC_homogeneous_cases():
     # could I nest these
@@ -50,7 +56,20 @@ def get_AC_hetrogeneous_cases():
     return AC_examples
 
 
+def get_AC_multiAC_cases():
+    # could I nest these
+    AC_examples = [
+        example_ftacvE_2AC_ox,
+        example_ftacvE_3AC_ox,
+    ]
+    return AC_examples
+
+
 def get_AC_cases():
     # could I nest these
-    AC_examples = get_AC_homogeneous_cases() + get_AC_hetrogeneous_cases()
+    AC_examples = (
+        get_AC_homogeneous_cases()
+        + get_AC_hetrogeneous_cases()
+        + get_AC_multiAC_cases()
+    )
     return AC_examples

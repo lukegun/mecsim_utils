@@ -17,169 +17,138 @@ from dataclasses import dataclass
     to organise the flow of these systems at some point
 """
 
-# TODO move these functions elsewhere
 
-
-# move this to a utils function or just in the bandwidth processing
+# TODO move this to a utils function or just in the bandwidth processing
 def max_filter1d_valid(a, W):
     hW = (W - 1) // 2  # Half window size
     return scipy.ndimage.maximum_filter1d(a.real, size=W)[hW:-hW]
 
 
-# TODO remove if unused
-def moving_average(x, w):
-    return np.convolve(x, np.ones(w), "valid") / w
+# This class goes through the possible harmonics and extracts the harmonics that exist in the class
+class calibrate_harmonics:
 
+    def __init__(self, harmonics, ongoing_freq, threshold=1.15):
 
-def AC_threshold_check(
-    frequency_current, frequency_space, harmonics, ongoing_freq, threshold=1.15
-):
+        self.threshold = threshold
 
-    # get the frequency increment
-    df = frequency_space[1]
-    n = int(frequency_space.shape[0] / 2)
+        # this saves the harmonic information
+        self.ongoing_freq = ongoing_freq
+        self.harmonics = harmonics
 
-    # this will need to be a standa alone function
-    ln_current = np.log(np.abs(frequency_current))
+        # this probably isn't required but easiest to do for time being
 
-    # use the ongoing_freq to attempt to mute
-    # the harmonics signal for background calculations
-    ln_background = deepcopy(ln_current[:n])
+    def calibrate_harms(self):
 
-    for harms in ongoing_freq:
-        int_1 = int((harms - 1.0) / df)
-        int_2 = int((harms + 1.0) / df)
-        avg = (
-            np.average(ln_background[int_1 - 100 : int_1])
-            + np.average(ln_background[int_2 : int_2 + 100])
-        ) / 2
-        ln_background[int_1:int_2] = avg
+        # check how many allocations are in the system
+        harms = list(self.harmonics.keys())
+        harms.sort()
 
-    # Smooth the max of the background and fit
-    fit = max_filter1d_valid(ln_background, 60)
-    n2 = fit.shape[0]
-    diff = int((n - n2) / 2)
+        # calibrate the Fundimental separately
+        # TODO CHECK IF WE CAN MAKE THIS REDUNDANT
+        harm_parent = list(self.harmonics.keys())
 
-    # could add an additional process here to remove the known harmonic info
-    p = np.polyfit(frequency_space[int(diff) : int(n - diff)], fit, 7)
-    func = np.poly1d(p)
-    fit = func(frequency_space[:n])
+        if 0 in harm_parent:
+            self.harmonics[0]["0"] = self.check_fundimental(self.harmonics[0]["0"])
+            harm_parent.remove(0)
 
-    # compare ln_current to the fit over the harmonics
-    lndiff = ln_current[:n] - fit
+        # check the harmonics
+        # TODO REFACTOR THIS INTO A CLASS for cleanlyness
+        for j in harms:
 
-    harmonics = calibrate_harms(harmonics, ongoing_freq, lndiff, df, threshold)
+            # lazy fundimental skip
+            if j == 0:
+                continue
+            # check the harmonics
+            harmlists = list(self.harmonics[j].keys())
+            for i in harmlists:
+                # get band of interest
+                exist = self.check_harm_exist(self.harmonics[j][i].freq)
+                if not exist and int(self.harmonics[j][i].freq) in self.ongoing_freq:
+                    # TODO drop all other related harmonics  OPTIMISE THIS SOMEHOW
+                    self.ongoing_freq.remove(int(self.harmonics[j][i].freq))
+                    del self.harmonics[j][i]
 
-    return harmonics
+            # if empty delete
+            if len(self.harmonics[j]) == 0:
+                del self.harmonics[j]
 
+        harms = list(self.harmonics.keys())
+        # delete the secondary harmonics
+        for j in harms:
+            # lazy fundimental skip
+            if j == 0:
+                continue
 
-# this probably isn't required but easiest to do for time being
-def calibrate_harms(harmonics, ongoing_freq, lndiff, df, threshold):
+            # check the harmonics
+            harmlists = list(self.harmonics[j].keys())
+            for i in harmlists:
+                b, exist = self.calculate_bandwidth(self.harmonics[j][i].freq)
+                if exist:
+                    self.harmonics[j][i].bandwith = b
+                else:  # case where bandwidth wasn't identified
+                    if int(self.harmonics[j][i].freq) in self.ongoing_freq:
+                        self.ongoing_freq.remove(int(self.harmonics[j][i].freq))
+                    del self.harmonics[j][i]
 
-    # check how many allocations are in the system
-    harms = list(harmonics.keys())
-    harms.sort()
+        return self.harmonics
 
-    # calibrate the Fundimental separately
-    # TODO CHECK IF WE CAN MAKE THIS REDUNDANT
-    harm_parent = list(harmonics.keys())
+    def check_fundimental(self, fundimental_harmonic):
 
-    if 0 in harm_parent:
-        harmonics[0]["0"] = check_fundimental(harmonics[0]["0"], ongoing_freq)
-        harm_parent.remove(0)
+        # calculate the bandwidth used for fundimental
+        maxWieght = 0
+        if len(self.ongoing_freq) != 1:
+            maxWieght = self.ongoing_freq[1] / 2  # what am I going to do if no AC????
 
-    # check the harmonics
-    for j in harms:
+        # TODO add a method that uses LN_current
+        fundimental_harmonic.bandwith = min(maxWieght, 25)
 
-        # lazy fundimental skip
-        if j == 0:
-            continue
+        return fundimental_harmonic
 
-        harmlists = list(harmonics[j].keys())
-        for i in harmlists:
-            # get band of interest
-            exist, temp_harms = check_harm_band(
-                harmonics[j][i], ongoing_freq, lndiff, df, threshold
-            )
-            if exist:
-                harmonics[j][i] = temp_harms
-            else:
-                # TODO drop all other related harmonics  OPTIMISE THIS SOMEHOW
-                del harmonics[j][i]
+    # TODO make this into a class to save on shared stuff
+    def check_harm_exist(self, AC_freq):
 
-        # if empty delete
-        if len(harmonics[j]) == 0:
-            del harmonics[j]
+        # AC_freq = harms.freq
+        int_harmband_1 = int((AC_freq - 0.5) / self.df)
+        int_harmband_2 = int((AC_freq + 0.5) / self.df)
 
-    return harmonics
+        # get the max value in range
+        peak_current = np.max(self.lndiff[int_harmband_1:int_harmband_2])
 
+        # get the max value in the diff
+        exist = False
+        if peak_current > self.threshold:
+            exist = True
 
-def check_fundimental(fundimental_harmonic, ongoing_freq):
+        return exist
 
-    # calculate the bandwidth used for fundimental
-    maxWieght = 0
-    if len(ongoing_freq) != 1:
-        maxWieght = ongoing_freq[1] / 2  # what am I going to do if no AC????
+    # TODO MOVE THIS TO A SECOND COMPONENT AS WE NEED
+    # TO DO A DOUBLE PASS OF THE HARMONICS TO CALCULATE THE
+    # HARMONICS BANDWIDTH
+    def calculate_bandwidth(self, AC_freq):
 
-    # TODO add a method that uses LN_current
-    fundimental_harmonic.bandwith = min(maxWieght, 25)
+        # AC_freq = harms.freq
+        int_harmband_1 = int((AC_freq - 0.5) / self.df)
+        int_harmband_2 = int((AC_freq + 0.5) / self.df)
 
-    return fundimental_harmonic
+        # get the max value in range
+        peak_current = np.max(self.lndiff[int_harmband_1:int_harmband_2])
 
-
-def calc_min_band(peak_current, lndiff, AC_freq, df):
-
-    adjustedband = False
-    test_freq = 0.25
-
-    # adjust the bandwidth
-    n = 64
-    for i in range(1, n):
-        i1 = int((AC_freq - i * test_freq) / df)
-        i2 = int((AC_freq + i * test_freq) / df)
-        # detect if the bandwidth is appropriate minimum
-        if np.average(lndiff[i1:i2]) < peak_current * 0.2:
-            minband = 2 * i * test_freq
-            adjustedband = True
-            break
-
-    # TODO IT'S BREAKING HERE
-    if not adjustedband:
-        minband = 2 * (n - 1) * test_freq
-
-    return minband
-
-
-def check_harm_band(harms, ongoing_freq, lndiff, df, threshold):
-
-    AC_freq = harms.freq
-
-    int_harmband_1 = int((AC_freq - 0.5) / df)
-    int_harmband_2 = int((AC_freq + 0.5) / df)
-
-    #
-    lndiff = np.where(lndiff < 0, 0, lndiff)
-
-    # get the max value in the diff
-    peak_current = np.max(lndiff[int_harmband_1:int_harmband_2])
-    if peak_current > threshold:
-        exist = True
         # adjust the bandwidth
-        minband = calc_min_band(peak_current, lndiff, AC_freq, df)
+        minband = self.calc_min_band(peak_current, AC_freq, self.df)
 
         # calculate the maximum bandwidth
         # TODO make rounding safe
-        ind = ongoing_freq.index(
+        ind = self.ongoing_freq.index(
             int(AC_freq)
         )  # we use int as its a quick truncation to a labelled harm
         if ind == 0:
-            bandidthrange = (AC_freq, ongoing_freq[ind + 1] - AC_freq)
-        elif ind + 1 == len(ongoing_freq):
-            bandidthrange = (ongoing_freq[ind - 1] - AC_freq,)
+            bandidthrange = (AC_freq, self.ongoing_freq[ind + 1] - AC_freq)
+        elif ind + 1 == len(self.ongoing_freq):
+            bandidthrange = (AC_freq - self.ongoing_freq[ind - 1],)
         else:
             bandidthrange = (
-                AC_freq - ongoing_freq[ind - 1],
-                ongoing_freq[ind + 1] - AC_freq,
+                AC_freq - self.ongoing_freq[ind - 1],
+                self.ongoing_freq[ind + 1] - AC_freq,
             )
 
         max_range = (
@@ -190,20 +159,83 @@ def check_harm_band(harms, ongoing_freq, lndiff, df, threshold):
         # Edge cases (massive AC harmonics)
         # to harmonic overlaps (KILL harmonics)
         hband = min(max_range, 40, 2 * 6 * minband)
+        # print( bandidthrange, minband, ind + 1, AC_freq)
 
         # lazy hack for the case where bandwidths can't be identified
         # This likily occurs during the
+        exist = True
         if hband <= 0.5:
             exist = False
 
         # TODO put a check in here to if bandwidth
         # doesn't exist as things are in it
-        harms.bandwith = hband
+        return hband, exist
 
-    else:
-        exist = False
+    def calc_min_band(self, peak_current, AC_freq, df):
 
-    return exist, harms
+        adjustedband = False
+        test_freq = 0.25
+
+        # adjust the bandwidth
+        n = 64
+        for i in range(1, n):
+            i1 = int((AC_freq - i * test_freq) / self.df)
+            i2 = int((AC_freq + i * test_freq) / self.df)
+            # detect if the bandwidth is appropriate minimum
+            if np.average(self.lndiff[i1:i2]) < peak_current * 0.2:
+                minband = 2 * i * test_freq
+                adjustedband = True
+                break
+
+        # TODO IT'S BREAKING HERE
+        if not adjustedband:
+            minband = 2 * (n - 1) * test_freq
+
+        return minband
+
+    # This like calculates the background for the log10 power frequency
+    def AC_threshold_check(self, frequency_current, frequency_space):
+
+        # get the frequency increment
+        self.df = frequency_space[1]
+        n = int(frequency_space.shape[0] / 2)
+
+        # this will need to be a standa alone function
+        ln_current = np.log(np.abs(frequency_current))
+
+        # use the ongoing_freq to attempt to mute
+        # the harmonics signal for background calculations
+        ln_background = deepcopy(ln_current[:n])
+
+        for harms in self.ongoing_freq:
+            int_1 = int((harms - 1.0) / self.df)
+            int_2 = int((harms + 1.0) / self.df)
+            avg = (
+                np.average(ln_background[int_1 - 100 : int_1])
+                + np.average(ln_background[int_2 : int_2 + 100])
+            ) / 2
+            ln_background[int_1:int_2] = avg
+
+        # Smooth the max of the background and fit
+        fit = max_filter1d_valid(ln_background, 60)
+        n2 = fit.shape[0]
+        diff = int((n - n2) / 2)
+
+        # could add an additional process here to remove the known harmonic info
+        p = np.polyfit(frequency_space[int(diff) : int(n - diff)], fit, 7)
+        func = np.poly1d(p)
+        fit = func(frequency_space[:n])
+
+        # compare ln_current to the fit over the harmonics
+        self.lndiff = ln_current[:n] - fit
+        # these are vector features
+        # remove the values below the baseline as these cause a propigation in error in finding the thresholds
+        self.lndiff = np.where(self.lndiff < 0, 0, self.lndiff)
+
+        # TODO this is a class -> function ->class which is dumb figure something else out
+        harmonics = self.calibrate_harms()
+
+        return harmonics
 
 
 def frequency_transform(Currenttot, tot_time):
@@ -483,13 +515,15 @@ class FTACV_experiment:
         ongoing_freq.sort()
 
         # adjust bandwidths
-        harmonics = AC_threshold_check(
+        HarmCalibrate = calibrate_harmonics(
+            possible_harmonics, ongoing_freq, threshold=self.threshold
+        )
+        harmonics = HarmCalibrate.AC_threshold_check(
             frequency_current,
             frequency_space,
-            possible_harmonics,
-            ongoing_freq,
+            # ongoing_freq,
             # TODO MAke this a handled varibles
-            threshold=self.threshold,
+            # threshold=self.threshold,
         )
 
         return harmonics
@@ -523,5 +557,8 @@ class FTACV_harmonic:
                 s += f",{self.combination[keys]}"
 
         # put something here so people know whats in the dataclass
-        return f"""Harmonic information for {s} at {self.freq} Hz,
-                   as the {self.harmonic_num} harmonic of {self.allocation}."""
+        return (
+            f"Harmonic information for {s} at {self.freq} Hz,"
+            f" as the {self.harmonic_num} harmonic of {self.allocation}"
+            f" bandwith used is {self.bandwith} Hz."
+        )
