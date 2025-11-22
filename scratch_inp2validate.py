@@ -15,9 +15,10 @@ import mecsim_utils.processing.window_func as ft_wind
 
 import matplotlib.pyplot as plt
 
-test_case = 1
+test_case = 2
 inp_loc = "tests/testingconfig"
 exp_inp = (
+    f"{inp_loc}/done/Master_EE_OX.inp",
     f"{inp_loc}/MasterE_2AC.inp",
     f"{inp_loc}/MasterE_3AC.inp",
 )

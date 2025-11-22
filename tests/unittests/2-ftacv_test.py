@@ -95,11 +95,11 @@ def test_auto_harmcount(current_factory, window_func, envelope):
             # assert abs(npp_ind - validation_data.harmdic[keys_p][keys_c][1]) < 80, s # TODO FIX to work over parameterisation
 
     # validate the possible overall information are right COULD ADD DC HERE
-    message = "ERROR, number of harmonics calculated don't match the precalculated amount expected"
+    message = "ERROR, number of harmonics calculated don't match the precalculated amount expected."
     assert validation_data.N_harms == i, message
-    message = "ERROR, Number in time series matches the expected size"
+    message = "ERROR, Number in time series matches the expected size."
     assert validation_data.shape == Currenttot.shape[0], message
-    message = "ERROR, average "
+    message = "ERROR, average total current doesn't match expected."
     assert quick_scientific_round(validation_data.average, 6) == quick_scientific_round(
         np.average(Currenttot), 6
     ), message

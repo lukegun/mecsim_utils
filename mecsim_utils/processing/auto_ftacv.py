@@ -51,26 +51,48 @@ class calibrate_harmonics:
             self.harmonics[0]["0"] = self.check_fundimental(self.harmonics[0]["0"])
             harm_parent.remove(0)
 
+        # generate an order to how we want to check if the harmonics exist This fix's below case
+        # There is a bug where an harmonic will be labeled 0:-6:4 instead of like 1:-1:0 due to the processs
+        # that the id get checked and filtered. obviously the oppisite would be prefered in this case
+
+        # todo this we get the max combination of the harmonics as such we can iterate over these
+        max_combination = self.get_max_combination(harms)
+
         # check the harmonics
         # TODO REFACTOR THIS INTO A CLASS for cleanlyness
-        for j in harms:
+        for h in range(
+            1, max_combination + 1
+        ):  # iterate over the harmonic combinations
+            for j in harms:
+                # check the harmonics
+                harmlists = list(self.harmonics[j].keys())
+                for i in harmlists:
 
-            # lazy fundimental skip
-            if j == 0:
-                continue
-            # check the harmonics
-            harmlists = list(self.harmonics[j].keys())
-            for i in harmlists:
-                # get band of interest
-                exist = self.check_harm_exist(self.harmonics[j][i].freq)
-                if not exist and int(self.harmonics[j][i].freq) in self.ongoing_freq:
-                    # TODO drop all other related harmonics  OPTIMISE THIS SOMEHOW
-                    self.ongoing_freq.remove(int(self.harmonics[j][i].freq))
-                    del self.harmonics[j][i]
+                    # lazy way to iterate over the harmonic combination instead of the other way
+                    if self.harmonics[j][i].harmonic_num != h:
+                        continue
 
-            # if empty delete
-            if len(self.harmonics[j]) == 0:
-                del self.harmonics[j]
+                    # get band of interest
+                    exist = self.check_harm_exist(self.harmonics[j][i].freq)
+                    print(
+                        j,
+                        i,
+                        exist,
+                        self.harmonics[j][i].harmonic_num,
+                        self.harmonics[j][i].freq,
+                        h,
+                    )
+                    if (
+                        not exist
+                        and int(self.harmonics[j][i].freq) in self.ongoing_freq
+                    ):
+                        # TODO drop all other related harmonics  OPTIMISE THIS SOMEHOW
+                        self.ongoing_freq.remove(int(self.harmonics[j][i].freq))
+                        del self.harmonics[j][i]
+
+                # if empty delete
+                if len(self.harmonics[j]) == 0:
+                    del self.harmonics[j]
 
         harms = list(self.harmonics.keys())
         # delete the secondary harmonics
@@ -92,6 +114,21 @@ class calibrate_harmonics:
 
         return self.harmonics
 
+    def get_max_combination(self, harms):
+
+        max_combination = 0
+        for j in harms:
+            # lazy fundimental skip
+            if j == 0:
+                continue
+            # check the harmonics
+            harmlists = list(self.harmonics[j].keys())
+            for i in harmlists:
+                if max_combination < self.harmonics[j][i].harmonic_num:
+                    max_combination = self.harmonics[j][i].harmonic_num
+
+        return max_combination
+
     def check_fundimental(self, fundimental_harmonic):
 
         # calculate the bandwidth used for fundimental
@@ -108,6 +145,7 @@ class calibrate_harmonics:
     def check_harm_exist(self, AC_freq):
 
         # AC_freq = harms.freq
+        # does this need to be a varible
         int_harmband_1 = int((AC_freq - 0.5) / self.df)
         int_harmband_2 = int((AC_freq + 0.5) / self.df)
 
@@ -134,7 +172,7 @@ class calibrate_harmonics:
         peak_current = np.max(self.lndiff[int_harmband_1:int_harmband_2])
 
         # adjust the bandwidth
-        minband = self.calc_min_band(peak_current, AC_freq, self.df)
+        minband = self.calc_min_band(peak_current, AC_freq)
 
         # calculate the maximum bandwidth
         # TODO make rounding safe
@@ -171,7 +209,7 @@ class calibrate_harmonics:
         # doesn't exist as things are in it
         return hband, exist
 
-    def calc_min_band(self, peak_current, AC_freq, df):
+    def calc_min_band(self, peak_current, AC_freq):
 
         adjustedband = False
         test_freq = 0.25
@@ -217,7 +255,9 @@ class calibrate_harmonics:
             ln_background[int_1:int_2] = avg
 
         # Smooth the max of the background and fit
-        fit = max_filter1d_valid(ln_background, 60)
+        # take a varible 0.1% window average max (this is to flatten the base line to be fit to)
+        nint_wind = int(0.001 * n)
+        fit = max_filter1d_valid(ln_background, nint_wind)
         n2 = fit.shape[0]
         diff = int((n - n2) / 2)
 
@@ -232,7 +272,7 @@ class calibrate_harmonics:
         # remove the values below the baseline as these cause a propigation in error in finding the thresholds
         self.lndiff = np.where(self.lndiff < 0, 0, self.lndiff)
 
-        # TODO this is a class -> function ->class which is dumb figure something else out
+        # this figures out if the previous calculated harmonics are relevant
         harmonics = self.calibrate_harms()
 
         return harmonics
@@ -415,7 +455,7 @@ def triplicate_AC(AC_signals, Max_freq, nmax=12):
         possible_harmonics[1].update(temp)
 
     # calculate the secondary harmonics
-    for z in range(3):
+    for z in range(-1, 3):  # this iterates over possible combinations
         temp, ongoing_freq = calc_secondrary(
             [AC_signals[z], AC_signals[(z + 1) % 2]], Max_freq, ongoing_freq, nmax=nmax
         )
