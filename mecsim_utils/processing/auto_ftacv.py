@@ -14,7 +14,7 @@ from dataclasses import dataclass
 
 """
     I think I need to sit down and figure out the best way
-    to organise the flow of these systems at some point
+    to organise the structure of this file
 """
 
 
@@ -74,14 +74,6 @@ class calibrate_harmonics:
 
                     # get band of interest
                     exist = self.check_harm_exist(self.harmonics[j][i].freq)
-                    print(
-                        j,
-                        i,
-                        exist,
-                        self.harmonics[j][i].harmonic_num,
-                        self.harmonics[j][i].freq,
-                        h,
-                    )
                     if (
                         not exist
                         and int(self.harmonics[j][i].freq) in self.ongoing_freq
@@ -359,10 +351,19 @@ def calc_tertiary(AC_signals, Max_freq, ongoing_freq=set(), nmax=12):
         (-1, -1, 1),
     ]
 
+    # This combination might not be needed instead remove the ongoing frequency at this
+    # stage of the algorithm
+    Ncombination = 3*nmax
     for i in range(nmax):
         for j in range(nmax):
             for k in range(nmax):
                 p = i + j + k
+
+                # this is a skip so the combination order is prioritised
+                # TODO THIS ISN"T GOING TO FIX ISSUE BETWEEN SECONDARY AND TERT
+                #if p != comb:
+                #    continue
+
                 for (
                     z1,
                     z2,
@@ -375,7 +376,7 @@ def calc_tertiary(AC_signals, Max_freq, ongoing_freq=set(), nmax=12):
                         + z3 * k * AC_signals[2]
                     )
                     if (
-                        freq > 0 and int(freq) not in ongoing_freq and freq < Max_freq
+                        freq > 0 and freq < Max_freq  #and int(freq) not in ongoing_freq 
                     ):  # to avoid duplicates
                         ongoing_freq.add(int(freq))
                         s = f"{z1*i}:{z2*j}:{z3*k}"
@@ -446,7 +447,7 @@ def triplicate_AC(AC_signals, Max_freq, nmax=12):
     temp, ongoing_freq = calc_fundimental(ongoing_freq)
     possible_harmonics[0].update(temp)
 
-    # calculate the primrary harmonics
+    # calculate the primrary harmonics (These are prioritised over secondary)
     for z in range(3):
         temp, ongoing_freq = calc_primrary(
             AC_signals[z], Max_freq, ongoing_freq, nmax=nmax

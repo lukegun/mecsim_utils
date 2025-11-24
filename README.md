@@ -20,9 +20,10 @@ auto capacitance fitting
 SOME smart way to lo9ad in files
 
 # TO MAJOR BUGS IN multi harmonic
-- max_filter1d on Line221 in auto_ftacv needs to be a varible based on length of frequency domain star DONE
-- There is a bug where an harmonic will be labeled 0:-6:4 instead of like 1:-1:0 due to the processs that the id get checked and filtered. obviously the oppisite would be prefered in this case (This has been fixed and bug was also found in the triplicate secondary case harmonics)
-- issue one fix's a lot of the issues but there is still an issue with random noise at VERY high frequency harmonics this could be a random simulation noise but I need some way to be like there is no way a stable harmonic could be id'd from this info
+- additional issue in figuring out what harmonics possibly exist in the tert are possible. This in general is an issue between the components aren't comunicating. Possible fix is to convert ongoing_freq to dixt with info and overwrite the existing harmonic is combination is smaller.
+- additionally need to double check for overlapping harmonics 
+- i think the ongoing_frequency just not working so will need to fix it all
+- issue one fix's a lot of the issues but there is still an issue with random noise at VERY high frequency harmonics this could be a random simulation noise but I need some way to be like there is no way a stable harmonic could be id'd from this info (are an artifact of capacitance)
 - NEED TO RESET THE FUCKING experimental examples (DO THIS BY LOADING IN THE SAVED dataclasses)
 
 # TODO
