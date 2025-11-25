@@ -40,7 +40,6 @@ def inp_factory(request):
 
 
 # this parameterises over the mecsim simulations
-# TODO optimise this so that it only runs once accross everything
 @pytest.fixture(scope="module", autouse=True)
 def current_factory(inp_factory):
 
@@ -50,8 +49,7 @@ def current_factory(inp_factory):
         Mec_parser.transform()
     )  # I can modify this to shift between DC and FTACV
 
-    """I SHOULD PUT SOMETHING HERE TO MORE CLEANLY WRAP THE
-    mecsim instance and the transformation"""
+    # Run a single mecsim instance
     Currenttot = mecUtils.mecsim_current(
         MECsimstruct,
     )

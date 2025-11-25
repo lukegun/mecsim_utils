@@ -27,6 +27,9 @@ SOME smart way to lo9ad in files
 - NEED TO RESET THE FUCKING experimental examples (DO THIS BY LOADING IN THE SAVED dataclasses)
 
 # TODO
+REFACTOR ongoing_freq from a set of AC signals to a dictionary that stores information such as {AC_SIGNAL:[{AC_allocation, location_inpossiblehamrs}]}. The reason for this is we need to be able to grab the neighboring harmonics and do a compolite validation of the stuff at that stage of the process.
+This is a reverse dictionary lookup that stores information the n add some possible checks in the later process to figure out what to do in these cases.
+
 
 - Finish up the unit tests for this component 
     TODO FIX THE AUTO HARM CASE FOR VERY HIGH FREQUENCY INFORMATION
